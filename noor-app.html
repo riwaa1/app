@@ -325,6 +325,21 @@ function syncA(){
 }
 syncA();
 
+function applyCfg(c){
+  var o=document.getElementById('rv-bn');if(o)o.remove();
+  var a=c.announcement,m=c.maintenance;
+  if(a&&a.show&&a.text){var d=document.createElement('div');d.id='rv-bn';d.textContent=a.text;d.style.cssText='position:sticky;top:0;z-index:50;background:#C9A961;color:#1B2623;padding:10px 14px;text-align:center;font-weight:600';document.body.insertBefore(d,document.body.firstChild)}
+  var p=document.getElementById('rv-mt');if(p)p.remove();
+  if(m&&m.on){var e=document.createElement('div');e.id='rv-mt';e.textContent=m.text||'التطبيق في صيانة مؤقتة';e.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;z-index:99;background:var(--bg);color:var(--tx);display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:22px';document.body.appendChild(e)}
+}
+function syncCfg(){
+  applyCfg(ld('cfg',{}));
+  if(!/^https?:\/\//.test(SB_URL))return;
+  fetch(SB_URL+'/rest/v1/app_config?select=key,value',{headers:{apikey:SB_KEY}}).then(function(r){if(!r.ok)throw 0;return r.json()})
+  .then(function(rs){var c={};rs.forEach(function(x){c[x.key]=x.value});sv('cfg',c);applyCfg(c)}).catch(function(){});
+}
+syncCfg();
+
 /* ---- المسبحة ---- */
 var N=ld('names',['سبحان الله','الحمد لله','الله أكبر','أستغفر الله','لا إله إلا الله']),S=ld('tasbih',{i:0,c:0,r:0,t:0,tg:33,v:true});
 function chips(){$('chips').innerHTML='';N.forEach(function(n,k){var b=document.createElement('button');b.className='btn '+(k==S.i?'':'ghost');b.textContent=n;b.onclick=function(){S.i=k;S.c=0;chips();draw()};$('chips').appendChild(b)})}
