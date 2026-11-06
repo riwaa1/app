@@ -1,7 +1,7 @@
 {
  "name": "رِواء",
  "short_name": "رِواء",
- "start_url": "./index.html",
+ "start_url": "./noor-app.html",
  "scope": "./",
  "display": "standalone",
  "orientation": "portrait",
@@ -34,11 +34,5 @@
    "type": "image/png",
    "purpose": "maskable"
   }
- ],
- "id": "riwaa",
- "description": "رفيقك اليومي للصلاة والقرآن والذكر",
- "categories": [
-  "lifestyle",
-  "education"
  ]
 }
