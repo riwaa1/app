@@ -46,7 +46,7 @@ label{display:block;color:var(--mut);font-size:13px;margin:8px 0 3px}
 </div>
 
 <div id="app" class="hide">
- <div class="cats" id="tabs"><button class="btn on" data-t="1">الأذكار</button><button class="btn ghost" data-t="2">الإعلان والصيانة</button><button class="btn ghost" data-t="3">JSON والنسخ</button></div>
+ <div class="cats" id="tabs"><button class="btn on" data-t="1">الأذكار</button><button class="btn ghost" data-t="2">الواجهة والرسائل</button><button class="btn ghost" data-t="3">JSON والنسخ</button><button class="btn ghost" data-t="4">المؤذنون</button></div>
 
  <div id="t1">
   <input id="qs" placeholder="ابحث في نصوص الأذكار…" style="margin-bottom:10px">
@@ -69,9 +69,30 @@ label{display:block;color:var(--mut);font-size:13px;margin:8px 0 3px}
     <label>رسالة الصيانة</label><textarea id="mt_t" style="min-height:80px;font-size:17px;line-height:1.8"></textarea>
     <label class="chk"><input type="checkbox" id="mt_s"> تفعيل الصيانة</label>
     <div style="margin-top:12px"><button class="btn" id="mt_b">حفظ</button></div></div>
+
+   <div class="card"><h2>رسالة الترحيب</h2><p class="mut">الشاشة التي تظهر عند فتح التطبيق. تظهر التغييرات عند الفتح التالي.</p>
+    <label>العنوان</label><input id="wl_h" placeholder="رِواء">
+    <label>النص</label><textarea id="wl_t" style="min-height:80px;font-size:17px;line-height:1.8"></textarea>
+    <label class="chk"><input type="checkbox" id="wl_s"> إظهار شاشة الترحيب</label>
+    <div style="margin-top:12px"><button class="btn" id="wl_b">حفظ</button></div></div>
+   <div class="card"><h2>الصوت</h2>
+    <label class="chk"><input type="checkbox" id="sx_s"> تفعيل مؤثرات اللمس لكل المستخدمين</label>
+    <div style="margin-top:12px"><button class="btn" id="sx_b">حفظ</button></div></div>
+   <div class="card"><h2>تنبيهات الأذان والأذكار</h2><p class="mut">تظهر للمستخدم عند دخول الوقت إن كان التطبيق مفتوحاً أو يعمل في الخلفية. استعمل {p} في نص الأذان لاسم الصلاة.</p><div id="rml" style="margin-top:8px"></div><button class="btn" id="rm_b">حفظ التنبيهات</button></div>
+   <div class="card"><h2>تعديل واجهة التطبيق</h2><p class="mut">غيّر نصوصاً أو أخفِ عناصر. اترك الحقل فارغاً ليبقى النص الأصلي.</p>
+    <div id="uit"></div><div id="uih" style="margin-top:6px"></div>
+    <label>إخفاء عناصر أخرى (محدد CSS في كل سطر)</label><textarea id="ui_h" class="ltr" style="min-height:70px"></textarea>
+    <label>نصوص أخرى (سطر لكل تعديل: المحدد =&gt; النص)</label><textarea id="ui_x" class="ltr" style="min-height:70px"></textarea>
+    <label>CSS مخصص (اختياري)</label><textarea id="ui_css" class="ltr" style="min-height:70px"></textarea>
+    <div class="row" style="margin-top:12px"><button class="btn" id="ui_b">حفظ</button><button class="btn danger" id="ui_r">استعادة الأصل</button></div></div>
   </div>
  </div>
 
+ <div id="t4" class="hide">
+  <div class="card" id="mzcard"><h2>المؤذنون</h2><p class="mut">أضف مؤذناً، ثم ارفع ملف صوته (mp3) أو ضع رابطاً، واستمع إليه هنا قبل الحفظ. يظهر للمستخدمين في الإعدادات مع زر استماع.</p>
+   <div id="mzl" style="margin-top:10px"></div>
+   <div class="row"><button class="btn ghost" id="mza">+ مؤذن جديد</button><button class="btn" id="mzs">حفظ الكل</button></div></div>
+ </div>
  <div id="t3" class="hide">
   <div class="card" id="cfgcard"><h2>مفاتيح الإعدادات (JSON)</h2><p class="mut">كل مفتاح له قيمة JSON يمكنك تعديلها أو مسحها.</p><div id="cfgl" style="margin-top:10px"></div><button class="btn ghost" id="cnew">+ مفتاح جديد</button></div>
   <div class="card"><h2>الأذكار بصيغة JSON</h2><p class="mut">الصيغة: [{"category":"الصباح","title":null,"body":"…","times":3,"active":true}]</p>
@@ -171,11 +192,11 @@ $('cdel').onclick=function(){if(confirm('حذف فئة «'+cat+'» وكل أذك
 function cget(k){var r=(cfg||[]).filter(function(x){return x.key==k})[0];return r?r.value:null}
 function cset(k,v){return api('app_config?on_conflict=key',{method:'POST',prefer:'resolution=merge-duplicates,return=representation',body:{key:k,value:v,updated_at:new Date().toISOString()}})}
 function drawCfg(){
-  var miss=cfg===null;$('cmiss').classList.toggle('hide',!miss);$('cfgbox').classList.toggle('hide',miss);$('cfgcard').classList.toggle('hide',miss);
+  var miss=cfg===null;$('cmiss').classList.toggle('hide',!miss);$('cfgbox').classList.toggle('hide',miss);$('cfgcard').classList.toggle('hide',miss);$('mzcard').classList.toggle('hide',miss);
   if(miss)return;
   var a=cget('announcement')||{},m=cget('maintenance')||{};
   $('an_t').value=a.text||'';$('an_s').checked=!!a.show;$('mt_t').value=m.text||'';$('mt_s').checked=!!m.on;
-  var L=$('cfgl');L.innerHTML='';
+  drawUi();drawMu();drawRm();var L=$('cfgl');L.innerHTML='';
   cfg.forEach(function(r){var c=mk('div','card');c.appendChild(mk('label',null,'المفتاح: '+r.key));
     var t=mk('textarea','ltr');t.value=JSON.stringify(r.value,null,2);c.appendChild(t);
     var row=mk('div','row');row.style.marginTop='8px';
@@ -185,6 +206,72 @@ function drawCfg(){
 $('an_b').onclick=function(){cset('announcement',{text:$('an_t').value.trim(),show:$('an_s').checked}).then(function(){say('تم حفظ الإعلان ✓');loadAll()}).catch(err)};
 $('mt_b').onclick=function(){cset('maintenance',{text:$('mt_t').value.trim(),on:$('mt_s').checked}).then(function(){say('تم الحفظ ✓');loadAll()}).catch(err)};
 $('cnew').onclick=function(){var n=prompt('اسم المفتاح (حروف إنجليزية وأرقام و _ ):');if(n&&/^[A-Za-z0-9_]+$/.test(n))cset(n,{}).then(function(){loadAll()}).catch(err);else if(n)say('اسم غير صالح.',1)};
+
+/* ===== الواجهة والرسائل ===== */
+var PT=[['الترحيب: العنوان','#splash h1'],['الترحيب: النص','#splash p'],['عنوان الإعدادات','#set h2'],['الجملة أسفل الإعدادات','#set > p.mut'],['زر الرئيسية','nav button[data-t=home]'],['زر المواقيت','nav button[data-t=pry]'],['زر المصحف','nav button[data-t=qrn]'],['زر الأذكار','nav button[data-t=adh]'],['زر الإعدادات','nav button[data-t=set]']];
+var PH=[['خيار الوضع الفاتح','#set .card:nth-child(2)'],['حجم خط المصحف','#set .card:nth-child(3)'],['المؤذن','#set .card:nth-child(4)'],['المؤثرات الصوتية','#set .card:nth-child(5)'],['التنبيهات','#set .card:nth-child(6)'],['الجملة أسفل الإعدادات','#set > p.mut'],['تبويب المواقيت','nav button[data-t=pry]'],['تبويب الأذكار','nav button[data-t=adh]']];
+var UT=[],UH=[];
+function drawUi(){
+  var u=cget('ui')||{},w=cget('welcome')||{},x=cget('sfx')||{};
+  $('wl_h').value=w.title||'';$('wl_t').value=w.text||'';$('wl_s').checked=w.show!==false;$('sx_s').checked=x.on!==false;
+  var T=u.texts||{},H=u.hide||[],ps=PH.map(function(p){return p[1]});
+  var A=$('uit');A.innerHTML='';UT=[];
+  PT.forEach(function(p){A.appendChild(mk('label',null,p[0]));var i=mk('input');i.placeholder='النص الأصلي';i.value=T[p[1]]||'';A.appendChild(i);UT.push({s:p[1],i:i})});
+  var B=$('uih');B.innerHTML='';UH=[];
+  PH.forEach(function(p){var l=mk('label','chk'),c=mk('input');c.type='checkbox';c.checked=H.indexOf(p[1])>=0;l.appendChild(c);l.appendChild(document.createTextNode(' إخفاء: '+p[0]));B.appendChild(l);UH.push({s:p[1],c:c})});
+  $('ui_h').value=H.filter(function(s){return ps.indexOf(s)<0}).join('\n');
+  $('ui_x').value=Object.keys(T).filter(function(s){return !PT.some(function(p){return p[1]==s})}).map(function(s){return s+' => '+T[s]}).join('\n');
+  $('ui_css').value=u.css||'';
+}
+function done(m){return function(){say(m);loadAll()}}
+$('wl_b').onclick=function(){cset('welcome',{title:$('wl_h').value.trim(),text:$('wl_t').value.trim(),show:$('wl_s').checked}).then(done('تم حفظ الترحيب ✓')).catch(err)};
+$('sx_b').onclick=function(){cset('sfx',{on:$('sx_s').checked}).then(done('تم الحفظ ✓')).catch(err)};
+$('ui_b').onclick=function(){var u={texts:{},hide:[],css:$('ui_css').value.trim()};
+  UT.forEach(function(x){var v=x.i.value.trim();if(v)u.texts[x.s]=v});
+  UH.forEach(function(x){if(x.c.checked)u.hide.push(x.s)});
+  $('ui_h').value.split('\n').forEach(function(l){l=l.trim();if(l)u.hide.push(l)});
+  $('ui_x').value.split('\n').forEach(function(l){var k=l.indexOf('=>');if(k>0){var s=l.slice(0,k).trim(),v=l.slice(k+2).trim();if(s&&v)u.texts[s]=v}});
+  cset('ui',u).then(done('تم حفظ الواجهة ✓')).catch(err)};
+$('ui_r').onclick=function(){if(confirm('استعادة واجهة التطبيق الأصلية؟'))api('app_config?key=eq.ui',{method:'DELETE'}).then(done('استُعيد الأصل')).catch(err)};
+
+/* ===== المؤذنون ===== */
+var MU=[];
+function upl(file){return auth({refresh_token:rt},'refresh_token').then(function(j){setSession(j);
+  var nm=Date.now()+'-'+file.name.replace(/[^A-Za-z0-9._-]/g,'_');
+  return fetch(SB_URL+'/storage/v1/object/adhan/'+nm,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+tok,'Content-Type':file.type||'audio/mpeg'},body:file}).then(function(r){
+    return r.json().then(function(x){if(!r.ok)throw new Error((x.message||x.error||'فشل الرفع')+' — هل أنشأت حاوية adhan بالـ SQL؟');return SB_URL+'/storage/v1/object/public/adhan/'+nm})})})}
+function drawMu(){var m=cget('muezzins');MU=Array.isArray(m)?m.map(function(x){return{name:x.name||'',url:x.url||'',on:x.on!==false}}):[];renderMu()}
+function renderMu(){var L=$('mzl');L.innerHTML='';
+  if(!MU.length)L.appendChild(mk('p','mut','لا مؤذنين بعد. إذا لم تحفظ قائمة هنا يعرض التطبيق أسماءه الافتراضية بلا صوت.'));
+  MU.forEach(function(m,i){var c=mk('div','card');
+    c.appendChild(mk('label',null,'اسم المؤذن'));var n=mk('input');n.value=m.name;n.oninput=function(){m.name=n.value};c.appendChild(n);
+    c.appendChild(mk('label',null,'رابط الصوت'));var u=mk('input','ltr');u.value=m.url;c.appendChild(u);
+    var au=mk('audio');au.controls=true;au.style.cssText='width:100%;margin-top:8px';if(m.url)au.src=m.url;c.appendChild(au);
+    u.oninput=function(){m.url=u.value.trim();if(m.url)au.src=m.url};
+    c.appendChild(mk('label',null,'أو ارفع ملف صوت'));var f=mk('input');f.type='file';f.accept='audio/*';
+    f.onchange=function(){if(!f.files[0])return;say('جارٍ رفع الملف…');upl(f.files[0]).then(function(url){m.url=url;u.value=url;au.src=url;say('تم الرفع ✓ — اضغط «حفظ الكل»')}).catch(err)};c.appendChild(f);
+    var ck=mk('label','chk'),cx=mk('input');cx.type='checkbox';cx.checked=m.on;cx.onchange=function(){m.on=cx.checked};ck.appendChild(cx);ck.appendChild(document.createTextNode(' ظاهر للمستخدمين'));c.appendChild(ck);
+    var r=mk('div','row');r.style.marginTop='10px';
+    var up=mk('button','btn ghost','↑'),dn=mk('button','btn ghost','↓'),d=mk('button','btn danger','حذف');
+    up.disabled=i==0;dn.disabled=i==MU.length-1;
+    up.onclick=function(){MU.splice(i-1,0,MU.splice(i,1)[0]);renderMu()};dn.onclick=function(){MU.splice(i+1,0,MU.splice(i,1)[0]);renderMu()};
+    d.onclick=function(){if(confirm('حذف هذا المؤذن؟')){MU.splice(i,1);renderMu()}};
+    r.appendChild(up);r.appendChild(dn);r.appendChild(d);c.appendChild(r);L.appendChild(c)})}
+$('mza').onclick=function(){MU.push({name:'',url:'',on:true});renderMu()};
+$('mzs').onclick=function(){var v=MU.filter(function(m){return m.name.trim()}).map(function(m){return{name:m.name.trim(),url:m.url,on:m.on}});
+  var s={};for(var i=0;i<v.length;i++){if(s[v[i].name]){say('الاسم «'+v[i].name+'» مكرر.',1);return}s[v[i].name]=1}
+  cset('muezzins',v).then(function(){say('تم حفظ المؤذنين ✓');loadAll()}).catch(err)};
+
+/* ===== التنبيهات ===== */
+var RMS=[['adhan','تنبيه الأذان','حان وقت صلاة {p}',null,''],['morning','أذكار الصباح','حان وقت أذكار الصباح، ابدأ يومك بذكر الله.',0,'بعد الشروق'],['evening','أذكار المساء','حان وقت أذكار المساء.',15,'بعد العصر'],['sleep','أذكار النوم','لا تنسَ أذكار النوم قبل أن تنام.',60,'بعد العشاء']],RI={};
+function drawRm(){var r=cget('reminders')||{},B=$('rml');B.innerHTML='';RI={};
+  RMS.forEach(function(x){var v=r[x[0]]||{},c=mk('div','card'),l=mk('label','chk'),cx=mk('input'),o=null;
+    cx.type='checkbox';cx.checked=v.on!==false;l.appendChild(cx);l.appendChild(document.createTextNode(' '+x[1]));c.appendChild(l);
+    c.appendChild(mk('label',null,'نص التنبيه'));var t=mk('input');t.value=v.text||x[2];c.appendChild(t);
+    if(x[3]!==null){c.appendChild(mk('label',null,'التأخير بالدقائق '+x[4]));o=mk('input');o.type='number';o.value=v.off!=null?v.off:x[3];c.appendChild(o)}
+    B.appendChild(c);RI[x[0]]={c:cx,t:t,o:o}})}
+$('rm_b').onclick=function(){var r={};Object.keys(RI).forEach(function(k){var i=RI[k];r[k]={on:i.c.checked,text:i.t.value.trim()};if(i.o)r[k].off=parseInt(i.o.value)||0});
+  cset('reminders',r).then(done('تم حفظ التنبيهات ✓')).catch(err)};
 
 /* ===== JSON والنسخ ===== */
 function strip(r){return{category:r.category,title:r.title,body:r.body,times:r.times,sort:r.sort,active:r.active}}
@@ -214,7 +301,7 @@ $('bf').onchange=function(){var f=this.files[0];if(!f)return;var fr=new FileRead
 /* ===== التبويبات والجلسة ===== */
 [].forEach.call(document.querySelectorAll('#tabs button'),function(b){b.onclick=function(){
   [].forEach.call(document.querySelectorAll('#tabs button'),function(x){x.classList.toggle('on',x==b);x.classList.toggle('ghost',x!=b)});
-  ['1','2','3'].forEach(function(n){$('t'+n).classList.toggle('hide',n!=b.dataset.t)})}});
+  ['1','2','3','4'].forEach(function(n){$('t'+n).classList.toggle('hide',n!=b.dataset.t)})}});
 if(ready()){try{var s=sessionStorage.getItem('rt');if(s){auth({refresh_token:s},'refresh_token').then(function(j){setSession(j);enter()}).catch(function(){})}}catch(e){}}
 </script>
 </body>
