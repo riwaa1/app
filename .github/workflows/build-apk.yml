@@ -1,4 +1,4 @@
-name: Build APK
+name:  APK
 on:
   workflow_dispatch:
   push:
@@ -48,4 +48,5 @@ jobs:
         with:
           name: riwaa-apk
           path: /tmp/cap/android/app/build/outputs/apk/debug/app-debug.apk
+
           
