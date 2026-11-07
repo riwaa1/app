@@ -185,6 +185,7 @@ body.light .rv-pb{background:rgba(0,0,0,.1)}
 <div id="al"></div>
 </section>
 
+<section class="scr" id="alm"><h2>تنبيهاتي</h2><p class="mut" id="alinfo"></p><div id="alist"></div><button class="btn" id="aadd" type="button">+ إضافة تنبيه</button></section>
 <section class="scr" id="set">
 <h2>الإعدادات</h2>
 <div class="card"><label class="row"><input type="checkbox" id="light"> الوضع الفاتح (الداكن هو الافتراضي)</label></div>
@@ -198,7 +199,7 @@ body.light .rv-pb{background:rgba(0,0,0,.1)}
 <label class="row"><input type="checkbox" id="rms"> تذكير أذكار النوم</label>
 <div class="row" style="margin-top:8px"><button class="btn ghost" id="rmn" type="button">تفعيل إشعارات الهاتف</button><button class="btn ghost" id="rmt" type="button">جرّب التنبيه</button></div>
 <p class="mut" id="rmi">تعمل التنبيهات والتطبيق مفتوح أو يعمل في الخلفية.</p></div>
-<p class="mut">لا إعلانات. لا تتبع. بياناتك على جهازك فقط.</p>
+<p class="mut">لا إعلانات ولا حسابات ولا تتبع. بياناتك الشخصية تبقى على جهازك.</p><div class="row" style="margin-top:8px;gap:8px;flex-wrap:wrap"><button class="btn ghost" id="hlb" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-4px;margin-inline-end:6px"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4.5"/><circle cx="12" cy="18" r=".6" fill="currentColor"/></svg>المساعدة</button><button class="btn ghost" id="ppb" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-4px;margin-inline-end:6px"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>سياسة الخصوصية</button></div>
 </section>
 </main>
 
@@ -210,6 +211,7 @@ body.light .rv-pb{background:rgba(0,0,0,.1)}
 <button data-t="pry"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>المواقيت</button>
 <button data-t="qrn"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 012-2h13v17H6a2 2 0 00-2 2zM4 20a2 2 0 012-2h13"/></svg>المصحف</button>
 <button data-t="adh"><svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="2.5"/><circle cx="18" cy="12" r="2.5"/><circle cx="12" cy="18" r="2.5"/><circle cx="6" cy="12" r="2.5"/></svg>الأذكار</button>
+<button data-t="alm"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9v4.2l2.6 1.6M4.5 5L2.5 7M19.5 5l2 2"/></svg>تنبيهاتي</button>
 <button data-t="set"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>الإعدادات</button>
 </nav>
 
@@ -567,6 +569,7 @@ async function schedNative(){
   var ch={id:cid,name:'الأذان والصلاة',importance:5,visibility:1,vibration:true};if(NSND)ch.sound='adhan.mp3';
   await LN.createChannel(ch);
   await LN.createChannel({id:'adhkar_v1',name:'تذكير الأذكار',importance:4,visibility:1,vibration:true});
+  await LN.createChannel({id:'alarm_v1',name:'تنبيهاتي',importance:5,visibility:1,vibration:true});
   var pend=await LN.getPending();
   if(pend.notifications.length)await LN.cancel({notifications:pend.notifications.map(function(n){return{id:n.id}})});
   var now=new Date(),list=[],days=[],i;
@@ -575,12 +578,16 @@ async function schedNative(){
   tims.forEach(function(t,i){var d=days[i];
    if(RU.p!==false&&a.on!==false)P.forEach(function(k,j){var at=nat(d,t[k],0);if(at>now)list.push({id:i*10+j+1,title:'حان وقت الأذان',body:a.text.replace('{p}',AR[k]),schedule:{at:at,allowWhileIdle:true},channelId:cid,extra:{c:null,a:1}})});
    [['morning','m',5],['evening','e',6],['sleep','s',7]].forEach(function(x){var c=rcfg(x[0]);if(RU[x[1]]===false||c.on===false||!t[c.at])return;var at=nat(d,t[c.at],c.off);if(at>now)list.push({id:i*10+x[2]+1,title:'تذكير الأذكار',body:c.text,schedule:{at:at,allowWhileIdle:true},channelId:'adhkar_v1',extra:{c:c.cat,a:0}})})});
+  ALM.forEach(function(a){if(!a.on)return;var dd=a.d||[],k,dt,at2;
+   if(!dd.length){if(a.at&&a.at>now.getTime())list.push(anot(a,new Date(a.at),0))}
+   else for(k=0;k<14;k++){dt=days[k];at2=nat(dt,a.t,0);if(dd.indexOf(dt.getDay())>=0&&at2>now)list.push(anot(a,at2,k))}});
+  if(ASNZ&&ASNZ.at>Date.now())list.push({id:999,title:ASNZ.a.l||'تنبيه',body:'انتهت الغفوة',schedule:{at:new Date(ASNZ.at),allowWhileIdle:true},channelId:'alarm_v1',extra:{al:ASNZ.a.id}});
   if(list.length)await LN.schedule({notifications:list})
  }catch(e){}
  NBUSY=false}
 if(LN){
  rnote=function(){};rcheck=function(){};
- LN.addListener('localNotificationActionPerformed',function(e){var n=e.notification||{},x=n.extra||{};ral(n.title,n.body,x.c,!!x.a)});
+ LN.addListener('localNotificationActionPerformed',function(e){var n=e.notification||{},x=n.extra||{};if(x.al){var A=ALM.filter(function(y){return y.id==x.al})[0];if(A)ringAlarm(A);return}ral(n.title,n.body,x.c,!!x.a)});
  setTimeout(schedNative,3000);setInterval(schedNative,6*3600*1000);
  document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(schedNative,500)});
  document.addEventListener('change',function(){clearTimeout(NTM);NTM=setTimeout(schedNative,1500)});
@@ -595,6 +602,93 @@ $('gc').addEventListener('change',selSave);$('gr').addEventListener('change',sel
  $('gc').value=SEL.c;$('gr').innerHTML='<option value="">الولاية / المنطقة</option>';
  GEO[SEL.c].r.forEach(function(r){var o=document.createElement('option');o.textContent=r;$('gr').appendChild(o)});
  if(SEL.r)$('gr').value=SEL.r;$('gc')._upd();$('gr')._upd()})();
+
+/* ===== المساعدة وسياسة الخصوصية ===== */
+var PP=[["ما يُحفظ على جهازك فقط", "موقعك الذي تحدده (إحداثيات أو مدينة)، واختيارك للدولة والولاية، وإعداداتك، وتقدّم عدّاد الأذكار والمسبحة، وآخر مواقيت محفوظة. لا نرسل هذه البيانات إلى خوادمنا. تُحذف كلها بحذف التطبيق أو مسح بيانات الموقع من المتصفح."], ["ما يُرسَل إلى خدمات خارجية", "• خدمة Aladhan (api.aladhan.com): نرسل إحداثيات موقعك وتاريخ اليوم لحساب مواقيت الصلاة.\n• خدمة Open-Meteo (geocoding-api.open-meteo.com): نرسل اسم المدينة أو الولاية التي تكتبها أو تختارها مع رمز الدولة لإيجاد إحداثياتها.\n• خادم التطبيق (Supabase): نجلب منه الأذكار والإعلانات وإعدادات التطبيق. لا نرسل إليه موقعك.\n• خطوط Google (fonts.googleapis.com): لتحميل خطوط التطبيق.\nتستقبل هذه الخدمات عنوان IP ومعلومات الاتصال التقنية المعتادة عند أي اتصال بالإنترنت، ولكل منها سياسة خصوصية خاصة بها."], ["ما لا نفعله", "لا نعرض إعلانات، ولا نستخدم أدوات تحليل أو تتبع، ولا ننشئ حسابات للمستخدمين، ولا نبيع بياناتك ولا نشاركها لأغراض تسويقية."], ["الأذونات", "• الموقع (اختياري): لتحديد مدينتك تلقائياً. يمكنك اختيار الدولة والولاية يدوياً دون منحه.\n• الإشعارات: لتذكيرك بالصلاة والأذكار. وفي تطبيق أندرويد تُجدول هذه التنبيهات على جهازك نفسه.\n• المنبهات الدقيقة والاهتزاز (أندرويد): لتصل التنبيهات في وقتها.\n• مستشعرات الاتجاه: لعرض بوصلة القبلة، وتُعالج على جهازك ولا تُرسَل."], ["الأطفال", "لا نجمع عمداً أي بيانات شخصية من أي شخص، بمن فيهم الأطفال."], ["التغييرات", "قد نحدّث هذه السياسة عند إضافة ميزات جديدة، وسيظهر التحديث هنا مع تغيّر التاريخ."]],PPD="آخر تحديث: 7 نوفمبر 2026",HP=[["البداية: حدّد مدينتك", "افتح تبويب «المواقيت»، ثم اختر الدولة وبعدها الولاية أو المنطقة. أو اكتب اسم مدينتك واضغط «اعتمد». أو اضغط «حدّد موقعي» ليستخدم التطبيق موقع هاتفك. يُحفظ اختيارك فلا تحتاج إلى إعادته."], ["مواقيت الصلاة", "تظهر أوقات اليوم والصلاة القادمة مع العدّ التنازلي. تُجلب المواقيت عبر الإنترنت وتُحفظ آخر مواقيت لتبقى ظاهرة عند انقطاع الاتصال."], ["القبلة", "في تبويب «المواقيت» اضغط «تشغيل البوصلة» وامسك الهاتف أفقياً بعيداً عن المعادن. حرّكه حتى يشير السهم إلى القبلة. وإن كانت الدقة ضعيفة فحرّك الهاتف على شكل رقم 8 لمعايرة البوصلة."], ["المصحف", "من تبويب «المصحف» تنقّل بين «الفهرس» و«الأجزاء» و«العلامات». اضغط على أي آية لوضع علامة عليها، وتجدها لاحقاً في «العلامات». ويعيدك زر «تابع القراءة» في الرئيسية إلى آخر موضع. وتتحكم بحجم الخط من الإعدادات."], ["الأذكار", "اختر الفئة (أذكار الصباح والمساء والنوم وغيرها من حصن المسلم)، ثم اضغط زر العدّاد تحت كل ذكر لتُنقص التكرار حتى تظهر علامة ✓."], ["المسبحة", "اضغط «سبّح» للعدّ. و«تراجع» ينقص عدّة واحدة، و«تصفير» يعيد العدّاد إلى الصفر، و«إضافة» تضيف ذكراً تكتبه أنت. ويمكنك تشغيل الاهتزاز أو إيقافه."], ["التنبيهات", "من «الإعدادات» فعّل تنبيه الصلاة وتذكير الأذكار، ثم اضغط «تفعيل إشعارات الهاتف» ووافق على الإذن، وجرّب «جرّب التنبيه». في تطبيق أندرويد تصل التنبيهات حتى والتطبيق مغلق، بشرط أن تسمح بـ«المنبهات والتذكيرات» وتجعل بطارية التطبيق «غير مقيّد». أما في المتصفح فتعمل والتطبيق مفتوح أو في الخلفية فقط."], ["الإعدادات", "يمكنك تفعيل الوضع الفاتح، وتغيير حجم خط المصحف، واختيار المؤذن وتجربته بزر «استمع»، وتشغيل المؤثرات الصوتية أو إيقافها."], ["مشكلة في المواقيت؟", "تأكد من اختيار المدينة الصحيحة ومن اتصال الإنترنت، ثم أعد فتح التطبيق. ولأي مشكلة أخرى راجع سياسة الخصوصية لمعرفة ما يُرسَل وما يُحفظ."]];
+function showDoc(id,title,sub,secs){var o=document.getElementById(id);if(o){o.style.display='block';o.scrollTop=0;return}
+ o=document.createElement('div');o.id=id;o.setAttribute('role','dialog');
+ o.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:99999;background:var(--bg);color:var(--tx);overflow:auto;padding:20px;padding-top:calc(20px + env(safe-area-inset-top,0px));direction:rtl;line-height:1.9';
+ var h=document.createElement('h2');h.textContent=title;h.style.color='var(--gold)';o.appendChild(h);
+ if(sub){var d=document.createElement('p');d.className='mut';d.textContent=sub;o.appendChild(d)}
+ secs.forEach(function(x){var t=document.createElement('h3');t.textContent=x[0];t.style.cssText='color:var(--em);margin-top:18px';o.appendChild(t);
+  var p=document.createElement('p');p.textContent=x[1];p.style.whiteSpace='pre-line';o.appendChild(p)});
+ var b=document.createElement('button');b.type='button';b.className='btn';b.textContent='إغلاق';b.style.margin='20px 0';b.onclick=function(){o.style.display='none'};o.appendChild(b);
+ document.body.appendChild(o)}
+$('ppb').onclick=function(){showDoc('ppv','سياسة الخصوصية',PPD,PP)};
+$('hlb').onclick=function(){showDoc('hlv','المساعدة','كيف تستخدم التطبيق',HP)};
+
+/* ===== تنبيهاتي: منبّه بوقت يختاره المستخدم + تلاوة آية ===== */
+var ALM=ld('alms',[]),ASNZ=ld('asnz',null),ARING=null,AVT=null,ATO=null,AAU=null,
+ADAYS=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'],
+APRE=[['آية الكرسي',2,255,1],['خواتيم سورة البقرة',2,285,2],['سورة الفاتحة',1,1,7],['سورة الإخلاص',112,1,4],['سورة الفلق',113,1,5],['سورة الناس',114,1,6],['أوائل سورة الملك',67,1,4],['ألا بذكر الله تطمئن القلوب',13,28,1],['سورة الشرح',94,1,8]],
+OVL='position:fixed;top:0;right:0;bottom:0;left:0;z-index:9999;background:var(--bg);color:var(--tx);overflow:auto;padding:20px;padding-top:calc(20px + env(safe-area-inset-top,0px));direction:rtl';
+function p3a(n){return String(n).padStart(3,'0')}
+function asave(){sv('alms',ALM);setTimeout(schedNative,300);setTimeout(schedNative,4000)}
+function nextOcc(t){var d=new Date(),h=t.split(':'),x=new Date(d.getFullYear(),d.getMonth(),d.getDate(),+h[0],+h[1],0,0);if(x<=d)x=new Date(x.getTime()+864e5);return x.getTime()}
+function adesc(a){var d=a.d||[];if(!d.length)return 'مرة واحدة';if(d.length==7)return 'يومياً';return d.map(function(x){return ADAYS[x]}).join('، ')}
+function apn(a){return a.z==='r'?'آية عشوائية':(APRE[a.z]||APRE[0])[0]}
+function anot(a,at,k){return{id:2000+a.id*20+k,title:a.l||'تنبيه',body:'حان وقت التنبيه',schedule:{at:at,allowWhileIdle:true},channelId:'alarm_v1',extra:{al:a.id}}}
+function adraw(){var box=$('alist');box.innerHTML='';
+ if(!ALM.length){var e=document.createElement('p');e.className='mut';e.textContent='لا توجد تنبيهات بعد. اضغط «إضافة تنبيه».';box.appendChild(e)}
+ ALM.slice().sort(function(x,y){return x.t<y.t?-1:x.t>y.t?1:0}).forEach(function(a){
+  var c=document.createElement('div'),l=document.createElement('div'),t=document.createElement('div'),m=document.createElement('div'),sw=document.createElement('input');
+  c.className='card row';c.style.cssText='justify-content:space-between;cursor:pointer;flex-wrap:nowrap';
+  t.textContent=a.t;t.style.cssText='font-size:38px;font-weight:600;direction:ltr;text-align:right;opacity:'+(a.on?1:.5);
+  m.className='mut';m.textContent=(a.l?a.l+' · ':'')+adesc(a)+' · '+apn(a);
+  sw.type='checkbox';sw.checked=!!a.on;sw.setAttribute('aria-label','تفعيل التنبيه');sw.style.cssText='transform:scale(1.7);margin:0 14px;accent-color:var(--em)';
+  sw.onclick=function(e){e.stopPropagation()};
+  sw.onchange=function(){a.on=sw.checked;if(a.on&&!(a.d||[]).length)a.at=nextOcc(a.t);asave();adraw()};
+  l.appendChild(t);l.appendChild(m);c.appendChild(l);c.appendChild(sw);c.onclick=function(){aedit(a)};box.appendChild(c)})}
+function aedit(a){var nw=!a;if(nw){var id=ld('alid',0)+1;sv('alid',id);a={id:id,t:'05:00',on:true,l:'',d:[],z:0}}
+ var o=document.createElement('div'),h=document.createElement('h2'),ti=document.createElement('input'),lb=document.createElement('input'),dl=document.createElement('p'),dr=document.createElement('div'),ap=document.createElement('p'),zs=document.createElement('select'),br=document.createElement('div'),sel=(a.d||[]).slice();
+ o.style.cssText=OVL;h.textContent=nw?'تنبيه جديد':'تعديل التنبيه';h.style.color='var(--gold)';o.appendChild(h);
+ ti.type='time';ti.value=a.t;ti.style.cssText='font-size:44px;width:100%;text-align:center;background:var(--bg2);color:var(--tx);border:1px solid var(--line);border-radius:12px;padding:10px;direction:ltr';o.appendChild(ti);
+ lb.type='text';lb.placeholder='اسم التنبيه (اختياري)';lb.value=a.l||'';lb.style.cssText='width:100%;margin:12px 0';o.appendChild(lb);
+ dl.className='mut';dl.textContent='التكرار (دون اختيار أي يوم = مرة واحدة)';o.appendChild(dl);dr.className='row';
+ ADAYS.forEach(function(nm,i){var b=document.createElement('button');b.type='button';function u(){b.className='btn'+(sel.indexOf(i)>=0?'':' ghost')}u();b.textContent=nm;
+  b.onclick=function(){var j=sel.indexOf(i);if(j>=0)sel.splice(j,1);else sel.push(i);u()};dr.appendChild(b)});o.appendChild(dr);
+ ap.className='mut';ap.style.marginTop='14px';ap.textContent='الآية التي تُتلى عند التنبيه';o.appendChild(ap);
+ zs.style.cssText='width:100%;padding:10px;border-radius:10px;background:var(--bg2);color:var(--tx);border:1px solid var(--line)';
+ APRE.forEach(function(p,i){var op=document.createElement('option');op.value=i;op.textContent=p[0];zs.appendChild(op)});
+ var ro=document.createElement('option');ro.value='r';ro.textContent='آية عشوائية';zs.appendChild(ro);zs.value=a.z;o.appendChild(zs);
+ function zv(){return zs.value==='r'?'r':+zs.value}
+ br.className='row';br.style.marginTop='20px';
+ function mk(txt,cls,fn){var b=document.createElement('button');b.type='button';b.className='btn '+cls;b.textContent=txt;b.onclick=fn;br.appendChild(b)}
+ mk('حفظ','',function(){if(!ti.value)return;a.t=ti.value;a.l=lb.value.trim();a.d=sel.slice().sort();a.z=zv();a.on=true;a.last=null;a.at=a.d.length?null:nextOcc(a.t);if(nw)ALM.push(a);asave();adraw();o.remove()});
+ mk('جرّب الآن','ghost',function(){ringAlarm({id:0,t:ti.value,l:lb.value.trim(),z:zv()},true)});
+ mk('إلغاء','ghost',function(){o.remove()});
+ if(!nw)mk('حذف','ghost',function(){if(confirm('حذف هذا التنبيه؟')){ALM=ALM.filter(function(x){return x.id!=a.id});asave();adraw();o.remove()}});
+ o.appendChild(br);document.body.appendChild(o)}
+function astop(){ARING=null;clearInterval(AVT);clearTimeout(ATO);if(AAU){AAU.onended=null;try{AAU.pause()}catch(e){}AAU=null}vstop();var o=document.getElementById('alv');if(o)o.remove()}
+function asnooze(a){astop();if(!a.id)return;ASNZ={a:a,at:Date.now()+300000};sv('asnz',ASNZ);
+ if(LN)try{LN.schedule({notifications:[{id:999,title:a.l||'تنبيه',body:'انتهت الغفوة',schedule:{at:new Date(ASNZ.at),allowWhileIdle:true},channelId:'alarm_v1',extra:{al:a.id}}]})}catch(e){}}
+function ringAlarm(a,test){if(ARING)return;ARING=a;
+ var pr=a.z==='r'?APRE[Math.floor(Math.random()*APRE.length)]:(APRE[a.z]||APRE[0]),
+ o=document.createElement('div'),t=document.createElement('div'),l=document.createElement('h2'),tx=document.createElement('p'),nt=document.createElement('p'),r=document.createElement('div'),
+ pb=document.createElement('button'),sb=document.createElement('button'),xb=document.createElement('button');
+ o.id='alv';o.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:100000;background:var(--bg);color:var(--tx);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;direction:rtl;overflow:auto';
+ t.textContent=a.t||'';t.style.cssText='font-size:56px;font-weight:600;color:var(--gold);direction:ltr';l.textContent=a.l||'حان وقت التنبيه';
+ tx.className='q';tx.style.cssText='font-size:28px;line-height:2.1;max-width:640px';nt.className='mut';
+ r.className='row';r.style.cssText='justify-content:center;margin-top:16px';
+ pb.type=sb.type=xb.type='button';pb.className='btn ghost';pb.textContent='▶ تشغيل التلاوة';pb.style.display='none';sb.className='btn ghost';sb.textContent='غفوة ٥ دقائق';xb.className='btn';xb.textContent='إيقاف';
+ function go(i){var c=pr[3],ay=pr[2]+(i%c),s=pr[1];if(ay>Q[s-1].v.length)ay=pr[2];tx.textContent=Q[s-1].v[ay-1];
+  AAU=new Audio('https://everyayah.com/data/Alafasy_128kbps/'+p3a(s)+p3a(ay)+'.mp3');
+  AAU.onended=function(){if(ARING)go(i+1)};AAU.onerror=function(){nt.textContent='تعذّر تشغيل الصوت. تحقق من الاتصال بالإنترنت.'};
+  var pm=AAU.play();if(pm&&pm.catch)pm.catch(function(){pb.style.display='inline-block'})}
+ pb.onclick=function(){pb.style.display='none';go(0)};xb.onclick=astop;sb.onclick=function(){asnooze(a)};
+ [pb,sb,xb].forEach(function(b){r.appendChild(b)});[t,l,tx,nt,r].forEach(function(e){o.appendChild(e)});document.body.appendChild(o);
+ vstop();vgo();AVT=setInterval(vgo,4000);ATO=setTimeout(astop,600000);go(0)}
+function acheck(){var n=new Date(),k=n.getFullYear()+'-'+n.getMonth()+'-'+n.getDate(),nm=n.getHours()*60+n.getMinutes(),now=n.getTime(),ch=false;
+ if(ASNZ&&now>=ASNZ.at){var z=ALM.filter(function(x){return x.id==ASNZ.a.id})[0]||ASNZ.a;ASNZ=null;sv('asnz',null);ringAlarm(z);return}
+ ALM.forEach(function(a){if(!a.on)return;var dd=a.d||[];
+  if(!dd.length){if(!a.at){a.at=nextOcc(a.t);ch=true}
+   if(now>=a.at+120000){a.on=false;ch=true}else if(now>=a.at&&a.last!==a.at){a.last=a.at;a.on=false;ch=true;ringAlarm(a)}return}
+  if(dd.indexOf(n.getDay())<0)return;var df=nm-(+a.t.slice(0,2)*60+ +a.t.slice(3,5));
+  if(df>=0&&df<2&&a.last!==k+a.t){a.last=k+a.t;ch=true;ringAlarm(a)}});
+ if(ch){asave();adraw()}}
+$('aadd').onclick=function(){aedit(null)};
+$('alinfo').textContent=LN?'تصلك التنبيهات حتى والتطبيق مغلق. اضغط على الإشعار ليفتح التطبيق وتُتلى الآية.':'في المتصفح تعمل التنبيهات والتطبيق مفتوح فقط. ثبّت تطبيق أندرويد لتصلك مع إغلاقه.';
+adraw();setInterval(acheck,1000);document.addEventListener('visibilitychange',function(){if(!document.hidden)acheck()});
 </script>
 </body>
 </html>
