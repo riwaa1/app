@@ -40,6 +40,7 @@ jobs:
           done
           for f in ic_launcher ic_launcher_round; do cp www/icon-512.png $R/mipmap-xxxhdpi/$f.png; done
           npx cap sync android
+          if [ -f "$SRC/debug.keystore" ]; then mkdir -p ~/.android; cp "$SRC/debug.keystore" ~/.android/debug.keystore; fi
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
