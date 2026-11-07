@@ -185,7 +185,7 @@ body.light .rv-pb{background:rgba(0,0,0,.1)}
 <div id="al"></div>
 </section>
 
-<section class="scr" id="alm"><h2>تنبيهاتي</h2><p class="mut" id="alinfo"></p><div id="alist"></div><button class="btn" id="aadd" type="button">+ إضافة تنبيه</button></section>
+<section class="scr" id="alm"><h2>تنبيهاتي</h2><p class="mut" id="alinfo"></p><div id="alist"></div><button class="btn" id="aadd" type="button">+ إضافة تنبيه</button> <button class="btn ghost" id="adg" type="button">فحص التنبيه التلقائي</button></section>
 <section class="scr" id="set">
 <h2>الإعدادات</h2>
 <div class="card"><label class="row"><input type="checkbox" id="light"> الوضع الفاتح (الداكن هو الافتراضي)</label></div>
@@ -578,10 +578,10 @@ async function schedNative(){
   tims.forEach(function(t,i){var d=days[i];
    if(RU.p!==false&&a.on!==false)P.forEach(function(k,j){var at=nat(d,t[k],0);if(at>now)list.push({id:i*10+j+1,title:'حان وقت الأذان',body:a.text.replace('{p}',AR[k]),schedule:{at:at,allowWhileIdle:true},channelId:cid,extra:{c:null,a:1}})});
    [['morning','m',5],['evening','e',6],['sleep','s',7]].forEach(function(x){var c=rcfg(x[0]);if(RU[x[1]]===false||c.on===false||!t[c.at])return;var at=nat(d,t[c.at],c.off);if(at>now)list.push({id:i*10+x[2]+1,title:'تذكير الأذكار',body:c.text,schedule:{at:at,allowWhileIdle:true},channelId:'adhkar_v1',extra:{c:c.cat,a:0}})})});
-  ALM.forEach(function(a){if(!a.on)return;var dd=a.d||[],k,dt,at2;
+  (RA?[]:ALM).forEach(function(a){if(!a.on)return;var dd=a.d||[],k,dt,at2;
    if(!dd.length){if(a.at&&a.at>now.getTime())list.push(anot(a,new Date(a.at),0))}
    else for(k=0;k<14;k++){dt=days[k];at2=nat(dt,a.t,0);if(dd.indexOf(dt.getDay())>=0&&at2>now)list.push(anot(a,at2,k))}});
-  if(ASNZ&&ASNZ.at>Date.now())list.push({id:999,title:ASNZ.a.l||'تنبيه',body:'انتهت الغفوة',schedule:{at:new Date(ASNZ.at),allowWhileIdle:true},channelId:'alarm_v1',extra:{al:ASNZ.a.id}});
+  if(!RA&&ASNZ&&ASNZ.at>Date.now())list.push({id:999,title:ASNZ.a.l||'تنبيه',body:'انتهت الغفوة',schedule:{at:new Date(ASNZ.at),allowWhileIdle:true},channelId:'alarm_v1',extra:{al:ASNZ.a.id}});
   if(list.length)await LN.schedule({notifications:list})
  }catch(e){}
  NBUSY=false}
@@ -623,7 +623,7 @@ ADAYS=['الأحد','الاثنين','الثلاثاء','الأربعاء','ال
 APRE=[['آية الكرسي',2,255,1],['خواتيم سورة البقرة',2,285,2],['سورة الفاتحة',1,1,7],['سورة الإخلاص',112,1,4],['سورة الفلق',113,1,5],['سورة الناس',114,1,6],['أوائل سورة الملك',67,1,4],['ألا بذكر الله تطمئن القلوب',13,28,1],['سورة الشرح',94,1,8]],
 OVL='position:fixed;top:0;right:0;bottom:0;left:0;z-index:9999;background:var(--bg);color:var(--tx);overflow:auto;padding:20px;padding-top:calc(20px + env(safe-area-inset-top,0px));direction:rtl';
 function p3a(n){return String(n).padStart(3,'0')}
-function asave(){sv('alms',ALM);setTimeout(schedNative,300);setTimeout(schedNative,4000)}
+function asave(){sv('alms',ALM);schedAlarms();setTimeout(schedNative,300);setTimeout(schedNative,4000)}
 function nextOcc(t){var d=new Date(),h=t.split(':'),x=new Date(d.getFullYear(),d.getMonth(),d.getDate(),+h[0],+h[1],0,0);if(x<=d)x=new Date(x.getTime()+864e5);return x.getTime()}
 function adesc(a){var d=a.d||[];if(!d.length)return 'مرة واحدة';if(d.length==7)return 'يومياً';return d.map(function(x){return ADAYS[x]}).join('، ')}
 function apn(a){return a.z==='r'?'آية عشوائية':(APRE[a.z]||APRE[0])[0]}
@@ -661,7 +661,7 @@ function aedit(a){var nw=!a;if(nw){var id=ld('alid',0)+1;sv('alid',id);a={id:id,
  o.appendChild(br);document.body.appendChild(o)}
 function astop(){ARING=null;clearInterval(AVT);clearTimeout(ATO);if(AAU){AAU.onended=null;try{AAU.pause()}catch(e){}AAU=null}vstop();var o=document.getElementById('alv');if(o)o.remove()}
 function asnooze(a){astop();if(!a.id)return;ASNZ={a:a,at:Date.now()+300000};sv('asnz',ASNZ);
- if(LN)try{LN.schedule({notifications:[{id:999,title:a.l||'تنبيه',body:'انتهت الغفوة',schedule:{at:new Date(ASNZ.at),allowWhileIdle:true},channelId:'alarm_v1',extra:{al:a.id}}]})}catch(e){}}
+ if(RA)schedAlarms();else if(LN)try{LN.schedule({notifications:[{id:999,title:a.l||'تنبيه',body:'انتهت الغفوة',schedule:{at:new Date(ASNZ.at),allowWhileIdle:true},channelId:'alarm_v1',extra:{al:a.id}}]})}catch(e){}}
 function ringAlarm(a,test){if(ARING)return;ARING=a;
  var pr=a.z==='r'?APRE[Math.floor(Math.random()*APRE.length)]:(APRE[a.z]||APRE[0]),
  o=document.createElement('div'),t=document.createElement('div'),l=document.createElement('h2'),tx=document.createElement('p'),nt=document.createElement('p'),r=document.createElement('div'),
@@ -687,8 +687,41 @@ function acheck(){var n=new Date(),k=n.getFullYear()+'-'+n.getMonth()+'-'+n.getD
   if(df>=0&&df<2&&a.last!==k+a.t){a.last=k+a.t;ch=true;ringAlarm(a)}});
  if(ch){asave();adraw()}}
 $('aadd').onclick=function(){aedit(null)};
-$('alinfo').textContent=LN?'تصلك التنبيهات حتى والتطبيق مغلق. اضغط على الإشعار ليفتح التطبيق وتُتلى الآية.':'في المتصفح تعمل التنبيهات والتطبيق مفتوح فقط. ثبّت تطبيق أندرويد لتصلك مع إغلاقه.';
+$('alinfo').textContent=RA?'يعمل التنبيه حتى والتطبيق مغلق: يهتز الهاتف ويفتح التطبيق وتُتلى الآية عندما تكون الشاشة مطفأة أو الهاتف مقفلاً. وإن كنت تستخدم الهاتف يظهر إشعار منبثق، فاضغط عليه.':LN?'تصلك التنبيهات حتى والتطبيق مغلق. اضغط على الإشعار ليفتح التطبيق وتُتلى الآية.':'في المتصفح تعمل التنبيهات والتطبيق مفتوح فقط. ثبّت تطبيق أندرويد لتصلك مع إغلاقه.';
 adraw();setInterval(acheck,1000);document.addEventListener('visibilitychange',function(){if(!document.hidden)acheck()});
+
+/* ===== فتح التطبيق تلقائياً عند التنبيه (أندرويد) ===== */
+var RA=NATIVE&&Capacitor.Plugins&&Capacitor.Plugins.RiwaaAlarm;
+function rcal(a,at,k){return{rc:a.id*20+k+1,at:at,id:a.id,t:a.t,l:a.l||'',z:a.z}}
+async function schedAlarms(){if(!RA)return;
+ try{var now=Date.now(),list=[],d0=new Date(),k,dt,at;
+  if(LN){var pm=await LN.checkPermissions();if(pm.display!=='granted')await LN.requestPermissions()}
+  ALM.forEach(function(a){if(!a.on)return;var dd=a.d||[];
+   if(!dd.length){if(a.at&&a.at>now)list.push(rcal(a,a.at,0))}
+   else for(k=0;k<14;k++){dt=new Date(d0.getFullYear(),d0.getMonth(),d0.getDate()+k);if(dd.indexOf(dt.getDay())<0)continue;at=nat(dt,a.t,0).getTime();if(at>now)list.push(rcal(a,at,k))}});
+  if(ASNZ&&ASNZ.at>now)list.push({rc:999999,at:ASNZ.at,id:ASNZ.a.id,t:ASNZ.a.t,l:ASNZ.a.l||'',z:ASNZ.a.z});
+  if(ATEST>now)list.push({rc:888888,at:ATEST,id:0,t:'اختبار',l:'اختبار',z:0});
+  await RA.schedule({alarms:list});
+  if(list.length&&!ld('fsask',false)){var fs=await RA.fullScreenStatus();
+   if(!fs.granted){sv('fsask',true);if(confirm('لتفتح شاشة التنبيه تلقائياً والهاتف مقفل، فعّل «عرض الإشعارات بملء الشاشة» في الشاشة التالية.'))RA.openFullScreenSettings()}}
+ }catch(e){}}
+function apoll(){if(!RA)return;
+ RA.getPending().then(function(r){var p=r&&r.alarm;if(!p||ARING)return;
+  var A=ALM.filter(function(x){return x.id==p.id})[0]||{id:p.id,t:p.t,l:p.l,z:p.z};
+  if(A.id&&!(A.d||[]).length&&A.on){A.on=false;A.last=A.at;asave();adraw()}
+  ringAlarm(A)}).catch(function(){})}
+if(RA){setInterval(apoll,1500);apoll();setTimeout(schedAlarms,2500);document.addEventListener('visibilitychange',function(){if(!document.hidden){apoll();schedAlarms()}})}
+
+/* ===== فحص التنبيه التلقائي ===== */
+var ATEST=0,ABUILD='alarm-3';
+async function adiag(){var L=['رقم الإصدار: '+ABUILD,'وضع التطبيق: '+(NATIVE?'أندرويد (أصلي)':'متصفح'),'إضافة الفتح التلقائي: '+(RA?'موجودة':'غير موجودة (ثبّت أحدث نسخة)')],p,f,ex;
+ try{if(LN){p=await LN.checkPermissions();L.push('إذن الإشعارات: '+(p.display==='granted'?'ممنوح':'غير ممنوح ('+p.display+')'))}}catch(e){L.push('إذن الإشعارات: تعذّر الفحص')}
+ try{if(RA){f=await RA.fullScreenStatus();L.push('الإشعار بملء الشاشة: '+(f.granted?'مسموح':'غير مسموح'))}}catch(e){}
+ try{if(LN){ex=await LN.checkExactNotificationSetting();L.push('المنبهات الدقيقة: '+ex.exact_alarm)}}catch(e){}
+ L.push('عدد التنبيهات المفعّلة: '+ALM.filter(function(a){return a.on}).length);
+ if(RA&&confirm(L.join('\n')+'\n\nهل تريد اختبار تنبيه تلقائي بعد 20 ثانية؟ بعد الموافقة أطفئ الشاشة وانتظر.')){ATEST=Date.now()+20000;await schedAlarms()}
+ else if(!RA)alert(L.join('\n'))}
+$('adg').onclick=adiag;
 </script>
 </body>
 </html>
