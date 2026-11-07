@@ -586,6 +586,15 @@ if(LN){
  document.addEventListener('change',function(){clearTimeout(NTM);NTM=setTimeout(schedNative,1500)});
  var _ft2=fetchT;fetchT=function(){_ft2();setTimeout(schedNative,2500)};
 }
+
+/* ===== حفظ اختيار الدولة والولاية ===== */
+var SEL=ld('sel',null);
+function selSave(){sv('sel',{c:$('gc').value,r:$('gr').value})}
+$('gc').addEventListener('change',selSave);$('gr').addEventListener('change',selSave);
+(function(){if(!SEL||SEL.c===''||SEL.c==null||!GEO[SEL.c])return;
+ $('gc').value=SEL.c;$('gr').innerHTML='<option value="">الولاية / المنطقة</option>';
+ GEO[SEL.c].r.forEach(function(r){var o=document.createElement('option');o.textContent=r;$('gr').appendChild(o)});
+ if(SEL.r)$('gr').value=SEL.r;$('gc')._upd();$('gr')._upd()})();
 </script>
 </body>
 </html>
