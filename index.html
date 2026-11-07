@@ -530,6 +530,62 @@ $('pk').onclick=function(e){if(e.target===this)this.style.display='none'};
 $('gc').addEventListener('change',function(){$('gr')._upd();var x=GEO[this.value];if(x)approx(x.c,x.n,'')});
 drawT();qibla();if(LOC)fetchT();
 if('serviceWorker' in navigator&&location.protocol.indexOf('http')==0)navigator.serviceWorker.register('sw.js').catch(function(){});
+
+/* ===== تنبيه الصلاة والأذكار: اهتزاز متكرر + شاشة تذكير ===== */
+var VIBT=null,VIBN=0;
+function vstop(){clearInterval(VIBT);VIBT=null;VIBN=0;try{navigator.vibrate&&navigator.vibrate(0)}catch(e){}}
+function vgo(){try{navigator.vibrate&&navigator.vibrate([600,250,600,250,600])}catch(e){}}
+function rnote(t,b,id){var o={body:b,icon:'icon-192.png',badge:'icon-192.png',tag:id,renotify:true,requireInteraction:true,vibrate:[600,250,600,250,600]};
+ if(navigator.serviceWorker&&navigator.serviceWorker.ready)navigator.serviceWorker.ready.then(function(r){r.showNotification(t,o)}).catch(function(){try{new Notification(t,o)}catch(e){}});
+ else try{new Notification(t,o)}catch(e){}}
+var _ral=ral;ral=function(title,msg,cn,adh){_ral(title,msg,cn,adh);vstop();vgo();
+ VIBT=setInterval(function(){VIBN++;if(VIBN>15||!document.getElementById('rv-al'))vstop();else vgo()},4000)};
+function rcheck(){try{if(!T)return;var now=new Date();
+ function at(k,off){var h=T[k].slice(0,5).split(':'),x=new Date(now);x.setHours(+h[0],+h[1]+(+off||0),0,0);return x}
+ var a=rcfg('adhan');
+ if(RU.p!==false&&a.on!==false)['Fajr','Dhuhr','Asr','Maghrib','Isha'].forEach(function(k){var df=now-at(k,0);if(df>=0&&df<900000)rfire('a'+k,'حان وقت الأذان',a.text.replace('{p}',AR[k]),null,true)});
+ [['morning','m'],['evening','e'],['sleep','s']].forEach(function(x){var c=rcfg(x[0]);if(RU[x[1]]===false||c.on===false||!T[c.at])return;var df=now-at(c.at,c.off);if(df>=0&&df<1800000)rfire(x[0],'تذكير الأذكار',c.text,c.cat,false)})}catch(e){}}
+document.addEventListener('visibilitychange',function(){if(!document.hidden)rcheck()});
+document.addEventListener('click',function(){if('Notification' in window&&Notification.permission==='default'&&!ld('askn',false)){sv('askn',true);try{Notification.requestPermission()}catch(e){}}},{once:true});
+
+/* ===== تنبيهات أندرويد الأصلية (تعمل والتطبيق مغلق) ===== */
+var NSND='__SOUND__'=='1',NATIVE=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()),
+LN=NATIVE&&Capacitor.Plugins&&Capacitor.Plugins.LocalNotifications,NT={},NBUSY=false,NTM=null;
+function nd(d){return String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+d.getFullYear()}
+function ntim(d){var k=nd(d)+'|'+LOC.la+'|'+LOC.lo+'|'+METH;if(NT[k])return Promise.resolve(NT[k]);
+ return fetch('https://api.aladhan.com/v1/timings/'+nd(d)+'?latitude='+LOC.la+'&longitude='+LOC.lo+'&method='+METH).then(function(r){return r.json()}).then(function(j){return NT[k]=j.data.timings})}
+function nat(d,t,off){var h=String(t).slice(0,5).split(':'),x=new Date(d);x.setHours(+h[0],+h[1]+(+off||0),0,0);return x}
+async function schedNative(){
+ if(!LN||!LOC||NBUSY)return;NBUSY=true;
+ try{
+  var pm=await LN.checkPermissions();
+  if(pm.display!=='granted'){pm=await LN.requestPermissions();if(pm.display!=='granted'){NBUSY=false;return}}
+  try{var ex=await LN.checkExactNotificationSetting();
+   if(ex.exact_alarm!=='granted'&&!ld('exask',false)){sv('exask',true);
+    if(confirm('لتصل تنبيهات الأذان في وقتها بالضبط، فعّل «المنبهات والتذكيرات» لهذا التطبيق في الشاشة التالية.'))await LN.changeExactNotificationSetting()}}catch(e){}
+  var cid=NSND?'adhan_s1':'adhan_n1';
+  var ch={id:cid,name:'الأذان والصلاة',importance:5,visibility:1,vibration:true};if(NSND)ch.sound='adhan.mp3';
+  await LN.createChannel(ch);
+  await LN.createChannel({id:'adhkar_v1',name:'تذكير الأذكار',importance:4,visibility:1,vibration:true});
+  var pend=await LN.getPending();
+  if(pend.notifications.length)await LN.cancel({notifications:pend.notifications.map(function(n){return{id:n.id}})});
+  var now=new Date(),list=[],days=[],i;
+  for(i=0;i<14;i++)days.push(new Date(now.getFullYear(),now.getMonth(),now.getDate()+i));
+  var tims=await Promise.all(days.map(ntim)),a=rcfg('adhan'),P=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
+  tims.forEach(function(t,i){var d=days[i];
+   if(RU.p!==false&&a.on!==false)P.forEach(function(k,j){var at=nat(d,t[k],0);if(at>now)list.push({id:i*10+j+1,title:'حان وقت الأذان',body:a.text.replace('{p}',AR[k]),schedule:{at:at,allowWhileIdle:true},channelId:cid,extra:{c:null,a:1}})});
+   [['morning','m',5],['evening','e',6],['sleep','s',7]].forEach(function(x){var c=rcfg(x[0]);if(RU[x[1]]===false||c.on===false||!t[c.at])return;var at=nat(d,t[c.at],c.off);if(at>now)list.push({id:i*10+x[2]+1,title:'تذكير الأذكار',body:c.text,schedule:{at:at,allowWhileIdle:true},channelId:'adhkar_v1',extra:{c:c.cat,a:0}})})});
+  if(list.length)await LN.schedule({notifications:list})
+ }catch(e){}
+ NBUSY=false}
+if(LN){
+ rnote=function(){};rcheck=function(){};
+ LN.addListener('localNotificationActionPerformed',function(e){var n=e.notification||{},x=n.extra||{};ral(n.title,n.body,x.c,!!x.a)});
+ setTimeout(schedNative,3000);setInterval(schedNative,6*3600*1000);
+ document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(schedNative,500)});
+ document.addEventListener('change',function(){clearTimeout(NTM);NTM=setTimeout(schedNative,1500)});
+ var _ft2=fetchT;fetchT=function(){_ft2();setTimeout(schedNative,2500)};
+}
 </script>
 </body>
 </html>
