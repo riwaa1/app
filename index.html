@@ -185,7 +185,7 @@ body.light .rv-pb{background:rgba(0,0,0,.1)}
 <div id="al"></div>
 </section>
 
-<section class="scr" id="alm"><h2>تنبيهاتي</h2><p class="mut" id="alinfo"></p><div id="alist"></div><button class="btn" id="aadd" type="button">+ إضافة تنبيه</button> <button class="btn ghost" id="adg" type="button">فحص التنبيه التلقائي</button></section>
+<section class="scr" id="alm"><h2>تنبيهاتي</h2><p class="mut" id="alinfo"></p><div id="alist"></div><button class="btn" id="aadd" type="button">+ إضافة تنبيه</button> <button class="btn ghost" id="adg" type="button">فحص التنبيه التلقائي</button> <button class="btn ghost" id="apt" type="button">اختبار الأذان بعد ٢٠ ثانية</button></section>
 <section class="scr" id="set">
 <h2>الإعدادات</h2>
 <div class="card"><label class="row"><input type="checkbox" id="light"> الوضع الفاتح (الداكن هو الافتراضي)</label></div>
@@ -576,13 +576,14 @@ async function schedNative(){
   for(i=0;i<14;i++)days.push(new Date(now.getFullYear(),now.getMonth(),now.getDate()+i));
   var tims=await Promise.all(days.map(ntim)),a=rcfg('adhan'),P=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
   tims.forEach(function(t,i){var d=days[i];
-   if(RU.p!==false&&a.on!==false)P.forEach(function(k,j){var at=nat(d,t[k],0);if(at>now)list.push({id:i*10+j+1,title:'حان وقت الأذان',body:a.text.replace('{p}',AR[k]),schedule:{at:at,allowWhileIdle:true},channelId:cid,extra:{c:null,a:1}})});
+   if(!RA&&RU.p!==false&&a.on!==false)P.forEach(function(k,j){var at=nat(d,t[k],0);if(at>now)list.push({id:i*10+j+1,title:'حان وقت الأذان',body:a.text.replace('{p}',AR[k]),schedule:{at:at,allowWhileIdle:true},channelId:cid,extra:{c:null,a:1}})});
    [['morning','m',5],['evening','e',6],['sleep','s',7]].forEach(function(x){var c=rcfg(x[0]);if(RU[x[1]]===false||c.on===false||!t[c.at])return;var at=nat(d,t[c.at],c.off);if(at>now)list.push({id:i*10+x[2]+1,title:'تذكير الأذكار',body:c.text,schedule:{at:at,allowWhileIdle:true},channelId:'adhkar_v1',extra:{c:c.cat,a:0}})})});
   (RA?[]:ALM).forEach(function(a){if(!a.on)return;var dd=a.d||[],k,dt,at2;
    if(!dd.length){if(a.at&&a.at>now.getTime())list.push(anot(a,new Date(a.at),0))}
    else for(k=0;k<14;k++){dt=days[k];at2=nat(dt,a.t,0);if(dd.indexOf(dt.getDay())>=0&&at2>now)list.push(anot(a,at2,k))}});
   if(!RA&&ASNZ&&ASNZ.at>Date.now())list.push({id:999,title:ASNZ.a.l||'تنبيه',body:'انتهت الغفوة',schedule:{at:new Date(ASNZ.at),allowWhileIdle:true},channelId:'alarm_v1',extra:{al:ASNZ.a.id}});
-  if(list.length)await LN.schedule({notifications:list})
+  if(list.length)await LN.schedule({notifications:list});
+  if(RA)schedAlarms()
  }catch(e){}
  NBUSY=false}
 if(LN){
@@ -700,13 +701,19 @@ async function schedAlarms(){if(!RA)return;
    if(!dd.length){if(a.at&&a.at>now)list.push(rcal(a,a.at,0))}
    else for(k=0;k<14;k++){dt=new Date(d0.getFullYear(),d0.getMonth(),d0.getDate()+k);if(dd.indexOf(dt.getDay())<0)continue;at=nat(dt,a.t,0).getTime();if(at>now)list.push(rcal(a,at,k))}});
   if(ASNZ&&ASNZ.at>now)list.push({rc:999999,at:ASNZ.at,id:ASNZ.a.id,t:ASNZ.a.t,l:ASNZ.a.l||'',z:ASNZ.a.z});
+  try{if(LOC&&RU.p!==false&&rcfg('adhan').on!==false){var PP=['Fajr','Dhuhr','Asr','Maghrib','Isha'],dys=[],tm;
+   for(k=0;k<14;k++)dys.push(new Date(d0.getFullYear(),d0.getMonth(),d0.getDate()+k));
+   tm=await Promise.all(dys.map(ntim));
+   tm.forEach(function(t,i){PP.forEach(function(p,j){var a3=nat(dys[i],t[p],0).getTime();if(a3>now)list.push({rc:100000+i*10+j,at:a3,kd:'p',k:p,n:AR[p],t:String(t[p]).slice(0,5)})})})}}catch(e){}
+  if(PSNZ&&PSNZ.at>now)list.push({rc:999998,at:PSNZ.at,kd:'p',k:PSNZ.k,n:PSNZ.n,t:PSNZ.t});
+  if(PTEST>now){var tn=new Date(PTEST);list.push({rc:888887,at:PTEST,kd:'p',k:'Dhuhr',n:'الظهر',t:('0'+tn.getHours()).slice(-2)+':'+('0'+tn.getMinutes()).slice(-2)})}
   if(ATEST>now)list.push({rc:888888,at:ATEST,id:0,t:'اختبار',l:'اختبار',z:0});
   await RA.schedule({alarms:list});
   if(list.length&&!ld('fsask',false)){var fs=await RA.fullScreenStatus();
    if(!fs.granted){sv('fsask',true);if(confirm('لتفتح شاشة التنبيه تلقائياً والهاتف مقفل، فعّل «عرض الإشعارات بملء الشاشة» في الشاشة التالية.'))RA.openFullScreenSettings()}}
  }catch(e){}}
 function apoll(){if(!RA)return;
- RA.getPending().then(function(r){var p=r&&r.alarm;if(!p||ARING)return;
+ RA.getPending().then(function(r){var p=r&&r.alarm;if(!p)return;if(p.kd==='p'){showPrayer(p.n,p.t);return}if(ARING)return;
   var A=ALM.filter(function(x){return x.id==p.id})[0]||{id:p.id,t:p.t,l:p.l,z:p.z};
   if(A.id&&!(A.d||[]).length&&A.on){A.on=false;A.last=A.at;asave();adraw()}
   ringAlarm(A)}).catch(function(){})}
@@ -722,6 +729,45 @@ async function adiag(){var L=['رقم الإصدار: '+ABUILD,'وضع التط�
  if(RA&&confirm(L.join('\n')+'\n\nهل تريد اختبار تنبيه تلقائي بعد 20 ثانية؟ بعد الموافقة أطفئ الشاشة وانتظر.')){ATEST=Date.now()+20000;await schedAlarms()}
  else if(!RA)alert(L.join('\n'))}
 $('adg').onclick=adiag;
+
+/* ===== شاشة وقت الصلاة (تصميم خاص) ===== */
+var PSNZ=ld('psnz',null),PRAY=null;
+(function(){var st=document.createElement('style');st.textContent='@keyframes prg{0%,100%{box-shadow:inset -26px -10px 0 0 #E3C887,0 0 30px 0 rgba(227,200,135,.25)}50%{box-shadow:inset -26px -10px 0 0 #E3C887,0 0 60px 6px rgba(227,200,135,.5)}}@keyframes prf{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}';document.head.appendChild(st)})();
+function pstop(){if(typeof mzStop==='function'){try{mzStop()}catch(e){}}if(PRAY){PRAY.remove();PRAY=null}}
+function showPrayer(name,time){if(PRAY)return;name=name||'الصلاة';
+ var o=document.createElement('div'),m=document.createElement('div'),h=document.createElement('div'),n=document.createElement('div'),t=document.createElement('div'),ph=document.createElement('div'),ay=document.createElement('p'),nt=document.createElement('p'),r=document.createElement('div'),pb=document.createElement('button'),sb=document.createElement('button'),xb=document.createElement('button');
+ o.setAttribute('role','dialog');
+ o.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:100001;background:radial-gradient(circle at 50% 28%,#1E3F38 0%,#122320 45%,#0A1210 100%);color:#E6EDEA;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;padding-top:calc(28px + env(safe-area-inset-top,0px));padding-bottom:calc(28px + env(safe-area-inset-bottom,0px));text-align:center;direction:rtl;overflow:auto;animation:prf .5s ease';
+ m.style.cssText='width:84px;height:84px;border-radius:50%;background:transparent;animation:prg 3s ease-in-out infinite;transform:rotate(-20deg);margin-bottom:26px';
+ h.textContent='حان الآن وقت';h.style.cssText='font-size:20px;color:#93A59F;letter-spacing:.5px';
+ n.textContent=name;n.style.cssText='font-size:68px;font-weight:700;color:#E3C887;line-height:1.3;margin:2px 0';
+ t.textContent=time||'';t.style.cssText='font-size:26px;direction:ltr;color:#2FA084;font-weight:600';
+ ph.textContent='حيَّ على الصلاة · حيَّ على الفلاح';ph.style.cssText='font-size:22px;margin:22px 0 10px;color:#C9D6D1';
+ ay.className='q';try{ay.textContent=Q[3].v[102]}catch(e){ay.textContent='إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَّوْقُوتًا'}
+ ay.style.cssText='font-size:24px;line-height:2.1;max-width:560px;color:#E6EDEA;opacity:.92';
+ nt.className='mut';nt.style.cssText='min-height:20px;margin:6px 0 0';
+ r.style.cssText='display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:20px';
+ pb.type=sb.type=xb.type='button';
+ pb.className='btn ghost';pb.textContent='▶ تشغيل الأذان';pb.style.display='none';
+ sb.className='btn ghost';sb.textContent='ذكّرني بعد ١٠ دقائق';
+ xb.className='btn';xb.textContent='تم، سأصلّي الآن';xb.style.cssText='min-width:200px;font-size:18px';
+ function play(){var sel=$('muez'),nm=sel&&sel.value,z=(typeof MZ!=='undefined'&&MZ.filter(function(x){return x.name==nm})[0])||(typeof MZ!=='undefined'&&MZ[0]),u=z&&z.url;
+  if(!u){nt.textContent='لا يتوفر ملف صوت للأذان حالياً.';return}
+  try{if(MA){MA.pause()}}catch(e){}
+  MA=new Audio(u);MA.onended=function(){MA=null};MA.onerror=function(){nt.textContent='تعذّر تشغيل الأذان. تحقق من الإنترنت.'};
+  var pr=MA.play();if(pr&&pr.catch)pr.catch(function(){pb.style.display='inline-block'})}
+ pb.onclick=function(){pb.style.display='none';play()};
+ xb.onclick=pstop;
+ sb.onclick=function(){var k=0,K=['Fajr','Dhuhr','Asr','Maghrib','Isha'];for(var x in AR)if(AR[x]==name)k=x;
+  PSNZ={at:Date.now()+600000,k:k||'Dhuhr',n:name,t:time||''};sv('psnz',PSNZ);pstop();
+  if(RA)schedAlarms();else setTimeout(function(){showPrayer(name,time)},600000)};
+ [pb,sb,xb].forEach(function(b){r.appendChild(b)});[m,h,n,t,ph,ay,nt,r].forEach(function(e){o.appendChild(e)});
+ document.body.appendChild(o);PRAY=o;try{vstop();vgo()}catch(e){}play()}
+/* في المتصفح: تظهر هذه الشاشة بدل النافذة البسيطة عند دخول وقت الصلاة */
+var _ral3=ral;ral=function(title,msg,cn,adh){if(adh){for(var k in AR){if(msg&&String(msg).indexOf(AR[k])>=0){showPrayer(AR[k],T&&T[k]?String(T[k]).slice(0,5):'');return}}}_ral3(title,msg,cn,adh)};
+
+var PTEST=0;
+$('apt').onclick=function(){PTEST=Date.now()+20000;if(RA){schedAlarms();alert('تم. أطفئ الشاشة الآن، وبعد ٢٠ ثانية يجب أن تظهر شاشة الأذان.')}else{setTimeout(function(){showPrayer('الظهر','')},20000);alert('بعد ٢٠ ثانية ستظهر شاشة الأذان (والتطبيق مفتوح).')}};
 </script>
 </body>
 </html>
