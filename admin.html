@@ -442,7 +442,7 @@ async function runTool(n,i){i=i||{};if(n=='set_config'&&i.value===undefined&&typ
   await cset(i.key,i.value);await loadAll();return 'OK';
  case 'delete_config':if(CK.indexOf(i.key)<0)return 'ERROR: key not allowed';await api('app_config?key=eq.'+enc(i.key),{method:'DELETE'});await loadAll();return 'OK';
  }return 'ERROR: unknown tool'}
-var PV={gemini:{u:'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',m:'gemini-2.5-flash',h:'مجاني: ادخل aistudio.google.com واضغط Get API key لإنشاء مفتاح بلا بطاقة. للحد المجاني شروط قد تتغيّر، وقد يُستخدم ما ترسله لتحسين خدمات Google.'},
+var PV={gemini:{u:'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',m:'gemini-3.8-flash',h:'مجاني: ادخل aistudio.google.com واضغط Get API key لإنشاء مفتاح بلا بطاقة. للحد المجاني شروط قد تتغيّر، وقد يُستخدم ما ترسله لتحسين خدمات Google.'},
 groq:{u:'https://api.groq.com/openai/v1/chat/completions',m:'llama-3.3-70b-versatile',h:'مجاني بحدود: أنشئ مفتاحاً من console.groq.com ثم API Keys.'},
 openrouter:{u:'https://openrouter.ai/api/v1/chat/completions',m:'openai/gpt-oss-20b:free',h:'نماذج مجانية بحدود يومية: أنشئ مفتاحاً من openrouter.ai ثم Keys، واختر من قائمة النماذج اسماً ينتهي بـ :free.'},
 anthropic:{u:'https://api.anthropic.com/v1/messages',m:'claude-sonnet-5-5',h:'مدفوع: من console.anthropic.com ثم API Keys، ويحتاج رصيداً.'}},OM=[];
@@ -477,7 +477,7 @@ function sendAI(){var t=$('ci').value.trim();if(!t)return;$('ci').value='';runAI
 $('cs').onclick=sendAI;$('ci').onkeydown=function(e){if(e.key=='Enter'&&(e.ctrlKey||e.metaKey))sendAI()};
 $('cc').onclick=function(){MSG=[];OM=[];$('cb').innerHTML='';bub('bt','بدأت محادثة جديدة.')};
 function stored(){try{return JSON.parse(localStorage.getItem('ai_cfg')||'{}')}catch(e){return{}}}
-function loadAi(){var s=stored(),p=prov(),c=s[p]||{};$('aik').value=c.k||'';$('aim').value=c.m||PV[p].m;$('aih').textContent=PV[p].h}
+function loadAi(){var s=stored(),p=prov(),c=s[p]||{},m=c.m;if(p=='gemini'&&/^gemini-(1|2)\./.test(m||''))m=PV[p].m;$('aik').value=c.k||'';$('aim').value=m||PV[p].m;$('aih').textContent=PV[p].h}
 $('aip').onchange=loadAi;
 $('aks').onclick=function(){try{var s=stored(),p=prov();s[p]={k:$('aik').value.trim(),m:$('aim').value.trim()};s.p=p;localStorage.setItem('ai_cfg',JSON.stringify(s));say('حُفظ على هذا الجهاز ✓')}catch(e){say('تعذّر الحفظ.',1)}};
 try{var s0=stored();if(s0.p)$('aip').value=s0.p}catch(e){}loadAi();
