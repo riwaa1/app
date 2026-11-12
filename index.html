@@ -148,7 +148,7 @@ body.light .rv-pb{background:rgba(0,0,0,.1)}
 <div class="row" style="margin-bottom:10px">
 <button class="btn" id="loc">حدّد موقعي</button></div>
 <div class="card"><p class="mut">اختر بلدك ومنطقتك، أو اكتب اسم مدينتك</p>
-<div class="row"><select id="gc"><option value="">الدولة</option></select><select id="gr"><option value="">الولاية / المنطقة</option></select></div>
+<div class="row"><select id="gc"><option value="">الدولة</option></select><select id="gr"><option value="">الولاية / المنطقة</option></select><select id="gct"><option value="">المدينة</option></select></div>
 <div class="row" style="margin-top:8px"><input type="text" id="gq" placeholder="أو اكتب اسم مدينتك"><button class="btn" id="gb">اعتمد</button></div></div>
 <div id="tm" class="card"></div>
 <p class="mut" id="ps"></p>
@@ -247,7 +247,7 @@ function fetchT(){
  .then(function(r){return r.json()}).then(function(j){T=j.data.timings;sv('times',T);sv('tday',nd(new Date()));$('ps').textContent='';drawT()})
  .catch(function(){var c=calcT(new Date(),LOC.la,LOC.lo,METH);if(c&&(!T||ld('tday','')!==nd(new Date()))){T=c;drawT();$('ps').textContent='لا اتصال: حُسبت المواقيت تقريباً على جهازك.'}else $('ps').textContent=T?'لا اتصال: تُعرض آخر مواقيت محفوظة.':'تحتاج اتصالاً بالإنترنت لأول مرة.'});
 }
-$('loc').onclick=function(){navigator.geolocation.getCurrentPosition(function(p){METH=3;LOC={la:p.coords.latitude,lo:p.coords.longitude,m:3};sv('loc',LOC);fetchT();qibla()},function(){$('ps').textContent='تعذّر تحديد الموقع. فعّل صلاحية الموقع.'})};
+$('loc').onclick=function(){navigator.geolocation.getCurrentPosition(function(p){var la0=p.coords.latitude,lo0=p.coords.longitude;METH=(la0>18.9&&la0<37.2&&lo0>-8.7&&lo0<12)?19:3;LOC={la:la0,lo:lo0,m:METH};sv('loc',LOC);fetchT();qibla()},function(){$('ps').textContent='تعذّر تحديد الموقع. فعّل صلاحية الموقع.'})};
 function nextP(){
  if(!T)return null;var d=new Date(),best=null,k;
  for(k in AR){if(k=='Sunrise')continue;var h=T[k].slice(0,5).split(':'),t=new Date(d);t.setHours(+h[0],+h[1],0,0);if(t>d){best={n:AR[k],t:t};break}}
@@ -417,7 +417,8 @@ function rcheck(){try{
 $('rmn').onclick=function(){if(!('Notification' in window)){$('rmi').textContent='متصفحك لا يدعم الإشعارات.';return}Notification.requestPermission().then(function(p){$('rmi').textContent=p=='granted'?'تم تفعيل إشعارات الهاتف ✓':'لم يُسمح بالإشعارات.'})};
 $('rmt').onclick=function(){ral('حان وقت أذكار الصباح','هكذا يظهر التنبيه لك.','الصباح',false);beep(880,.5,.14)};
 setInterval(rcheck,5000);setTimeout(rcheck,1500);
-if(LOC&&ld('tday','')!=new Date().toDateString()){sv('tday',new Date().toDateString());fetchT()}
+if(LOC&&ld('tday','')!==nd(new Date())){sv('tday',nd(new Date()));fetchT()}
+setInterval(function(){if(LOC&&ld('tday','')!==nd(new Date())){sv('tday',nd(new Date()));fetchT()}},60000);
 /* ---- شريط تقدّم الصلاة القادمة ---- */
 function prevT(){var d=new Date(),best=null;
   ['Fajr','Dhuhr','Asr','Maghrib','Isha'].forEach(function(k){var h=T[k].slice(0,5).split(':'),x=new Date(d);x.setHours(+h[0],+h[1],0,0);if(x<=d)best=x});
@@ -478,7 +479,7 @@ var fs=ld('fs',30);$('fs').value=fs;document.documentElement.style.setProperty('
 $('fs').oninput=function(){document.documentElement.style.setProperty('--qs',this.value+'px');sv('fs',+this.value)};
 /* ---- الدول والولايات ---- */
 var GEO=[];function g(c,n,l){GEO.push({c:c,n:n,r:l.split('،')})}
-g('DZ','الجزائر','أدرار،الشلف،الأغواط،أم البواقي،باتنة،بجاية،بسكرة،بشار،البليدة،البويرة،تمنراست،تبسة،تلمسان،تيارت،تيزي وزو،الجزائر،الجلفة،جيجل،سطيف،سعيدة،سكيكدة،سيدي بلعباس،عنابة،قالمة،قسنطينة،المدية،مستغانم،المسيلة،معسكر،ورقلة،وهران،البيض،إليزي،برج بوعريريج،بومرداس،الطارف،تندوف،تيسمسيلت،الوادي،خنشلة،سوق أهراس،تيبازة،ميلة،عين الدفلى،النعامة،عين تموشنت،غرداية،غليزان،المغير،المنيعة،أولاد جلال،برج باجي مختار،بني عباس،تيميمون،تقرت،جانت،عين صالح،عين قزام');
+g('DZ','الجزائر','أدرار،الشلف،الأغواط،أم البواقي،باتنة،بجاية،بسكرة،بشار،البليدة،البويرة،تمنراست،تبسة،تلمسان،تيارت،تيزي وزو،الجزائر،الجلفة،جيجل،سطيف،سعيدة،سكيكدة،سيدي بلعباس،عنابة،قالمة،قسنطينة،المدية،مستغانم،المسيلة،معسكر،ورقلة،وهران،البيض،إليزي،برج بوعريريج،بومرداس،الطارف،تندوف،تيسمسيلت،الوادي،خنشلة،سوق أهراس،تيبازة،ميلة،عين الدفلى،النعامة،عين تموشنت،غرداية،غليزان،تيميمون،برج باجي مختار،أولاد جلال،بني عباس،إن صالح،إن قزام،تقرت،جانت،المغير،المنيعة،أفلو،بريكة،القنطرة،بئر العاتر،العريشة،قصر الشلالة،عين وسارة،مسعد،قصر البخاري،بوسعادة،الأبيض سيدي الشيخ');
 g('SA','السعودية','الرياض،مكة المكرمة،المدينة المنورة،القصيم،الشرقية،عسير،تبوك،حائل،الحدود الشمالية،جازان،نجران،الباحة،الجوف');
 g('EG','مصر','القاهرة،الجيزة،الإسكندرية،الدقهلية،الشرقية،المنوفية،القليوبية،البحيرة،كفر الشيخ،الغربية،الإسماعيلية،بورسعيد،السويس،دمياط،شمال سيناء،جنوب سيناء،مطروح،الوادي الجديد،الفيوم،بني سويف،المنيا،أسيوط،سوهاج،قنا،الأقصر،أسوان،البحر الأحمر');
 g('MA','المغرب','طنجة،الحسيمة،الشرق،فاس،الرباط،بني ملال،الدار البيضاء،مراكش،درعة تافيلالت،أكادير،كلميم،العيون،الداخلة');
@@ -517,7 +518,10 @@ function geo(name,cc){$('ps').textContent='جارٍ البحث عن «'+name+'»
   if(!r){if(!approx(cc,name,'لم أجد «'+name+'» بدقة، فاستخدمتُ عاصمة الدولة (تقريبي). اكتب اسم مدينة قريبة لدقة أفضل.'))$('ps').textContent='لم أجد «'+name+'». جرّب اسم مدينة قريبة.';return}
   METH=MM[cc]||3;LOC={la:r.latitude,lo:r.longitude,nm:name,m:METH};sv('loc',LOC);fetchT();qibla()})
  .catch(function(){if(!approx(cc,name,'لا اتصال بخدمة البحث، فاستخدمتُ عاصمة الدولة لحساب القبلة (تقريبي).'))$('ps').textContent='تعذّر البحث. تحقق من الاتصال بالإنترنت.'})}
-$('gr').onchange=function(){if(this.value)geo(this.value,GEO[$('gc').value].c)};
+var DZC={'أفلو':[34.11,2.10],'بريكة':[35.64,5.34],'القنطرة':[35.21,5.71],'بئر العاتر':[34.74,8.06],'العريشة':[34.22,-1.26],'قصر الشلالة':[35.22,2.32],'عين وسارة':[35.45,2.90],'مسعد':[34.16,3.50],'قصر البخاري':[35.88,2.75],'بوسعادة':[35.21,4.18],'الأبيض سيدي الشيخ':[32.88,0.55],'إن صالح':[27.20,2.48],'إن قزام':[19.57,5.77],'جانت':[24.55,9.48],'تيميمون':[29.26,0.23],'برج باجي مختار':[21.33,0.93],'أولاد جلال':[34.43,5.07],'بني عباس':[30.13,-2.17],'تقرت':[33.10,6.06],'المغير':[33.95,5.92],'المنيعة':[30.58,2.88]};
+$('gr').onchange=function(){if(!this.value)return;var cc=GEO[$('gc').value].c,c=cc==='DZ'&&DZC[this.value];
+ if(c){METH=MM.DZ;LOC={la:c[0],lo:c[1],nm:this.value,m:METH};sv('loc',LOC);fetchT();qibla();return}
+ geo(this.value,cc)};
 $('gb').onclick=function(){var q=$('gq').value.trim();if(q)geo(q,$('gc').value!==''?GEO[$('gc').value].c:'')};
 /* ---- قوائم اختيار بتصميم التطبيق ---- */
 function enhance(sel){var b=document.createElement('button');b.type='button';b.className='sb';sel.style.display='none';sel.parentNode.insertBefore(b,sel.nextSibling);
@@ -551,7 +555,7 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden)rche
 document.addEventListener('click',function(){if('Notification' in window&&Notification.permission==='default'&&!ld('askn',false)){sv('askn',true);try{Notification.requestPermission()}catch(e){}}},{once:true});
 
 /* ===== تنبيهات أندرويد الأصلية (تعمل والتطبيق مغلق) ===== */
-var NSND='__SOUND__'=='1',NATIVE=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()),
+var NSND='1'=='1',NATIVE=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()),
 LN=NATIVE&&Capacitor.Plugins&&Capacitor.Plugins.LocalNotifications,NT={},NBUSY=false,NTM=null;
 function nd(d){return String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+d.getFullYear()}
 var NTC=ld('ntc',{});
@@ -773,9 +777,9 @@ function showPrayer(name,time){if(PRAY)return;name=name||'الصلاة';
  sb.className='btn ghost';sb.textContent='ذكّرني بعد '+(PSC.snooze||10)+' دقائق';
  xb.className='btn';xb.textContent='تم، سأصلّي الآن';xb.style.cssText='min-width:200px;font-size:18px';
  function play(){var sel=$('muez'),nm=sel&&sel.value,z=(typeof MZ!=='undefined'&&MZ.filter(function(x){return x.name==nm})[0])||(typeof MZ!=='undefined'&&MZ[0]),u=z&&z.url;
-  if(!u){nt.textContent='لا يتوفر ملف صوت للأذان حالياً.';return}
+  if(!u)u='adhan.mp3';
   try{if(MA){MA.pause()}}catch(e){}
-  MA=new Audio(u);MA.onended=function(){MA=null};MA.onerror=function(){nt.textContent='تعذّر تشغيل الأذان. تحقق من الإنترنت.'};
+  MA=new Audio(u);MA.onended=function(){MA=null};MA.onerror=function(){if(!/adhan\.mp3$/.test((MA&&MA.src)||'')){MA=new Audio('adhan.mp3');MA.onended=function(){MA=null};MA.play().catch(function(){nt.textContent='تعذّر تشغيل الأذان.'});return}nt.textContent='تعذّر تشغيل الأذان. تحقق من الإنترنت.'};
   var pr=MA.play();if(pr&&pr.catch)pr.catch(function(){pb.style.display='inline-block'})}
  pb.onclick=function(){pb.style.display='none';play()};
  xb.onclick=pstop;
@@ -820,6 +824,26 @@ async function ardy(){var L=[],p,f,b=null;
  try{if(b&&!b.ignoring&&confirm('السماح للتطبيق بالعمل دون قيود بطارية؟')){await RA.requestIgnoreBattery();return}}catch(e){}
  try{await RA.openAppSettings()}catch(e){}}
 $('rdy').onclick=ardy;
+/* ===== مدن الولايات (تُدار من لوحة التحكم) ===== */
+var CTL=[];
+function cityFill(restore){
+  var sel=$('gct'),b=sel.nextSibling,C=(ld('cfg',{})||{}).cities||{},g=GEO[$('gc').value],r=$('gr').value,
+  arr=(g&&r&&C[g.c]&&C[g.c][r])||[];
+  CTL=arr.filter(function(x){return x&&x.n&&x.on!==false&&isFinite(x.la)&&isFinite(x.lo)});
+  sel.innerHTML='<option value="">المدينة</option>';
+  CTL.forEach(function(x,i){var op=document.createElement('option');op.value=i;op.textContent=x.n;sel.appendChild(op)});
+  if(b&&b.className=='sb')b.style.display=CTL.length?'':'none';
+  var sc=restore&&ld('selc',null);
+  if(sc)CTL.forEach(function(x,i){if(x.n==sc)sel.value=i});
+  if(sel._upd)sel._upd()}
+enhance($('gct'));
+$('gct').onchange=function(){var c=CTL[this.value],g=GEO[$('gc').value];if(!c||!g)return;
+  METH=MM[g.c]||3;LOC={la:+c.la,lo:+c.lo,nm:c.n,m:METH};sv('loc',LOC);sv('selc',c.n);fetchT();qibla()};
+$('gc').addEventListener('change',function(){sv('selc',null);cityFill()});
+$('gr').addEventListener('change',function(){sv('selc',null);cityFill()});
+var _ac3=applyCfg;applyCfg=function(c){_ac3(c);try{cityFill(true)}catch(e){}};
+cityFill(true);
+
 </script>
 </body>
 </html>

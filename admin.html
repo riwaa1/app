@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; media-src https:; connect-src https://jnftolskchqkynuakdob.supabase.co https://api.anthropic.com https://generativelanguage.googleapis.com https://api.groq.com https://openrouter.ai; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; media-src https:; connect-src https://jnftolskchqkynuakdob.supabase.co https://geocoding-api.open-meteo.com https://api.anthropic.com https://generativelanguage.googleapis.com https://api.groq.com https://openrouter.ai; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex,nofollow">
 <title>لوحة تحكم رِواء</title>
@@ -49,7 +49,7 @@ label{display:block;color:var(--mut);font-size:13px;margin:8px 0 3px}
 </div>
 
 <div id="app" class="hide">
- <div class="cats" id="tabs"><button class="btn on" data-t="1">الأذكار</button><button class="btn ghost" data-t="2">الواجهة والرسائل</button><button class="btn ghost" data-t="3">JSON والنسخ</button><button class="btn ghost" data-t="4">المؤذنون</button><button class="btn ghost" data-t="5">ميزات التطبيق</button><button class="btn ghost" data-t="6">المساعد الذكي</button></div>
+ <div class="cats" id="tabs"><button class="btn on" data-t="1">الأذكار</button><button class="btn ghost" data-t="2">الواجهة والرسائل</button><button class="btn ghost" data-t="3">JSON والنسخ</button><button class="btn ghost" data-t="4">المؤذنون</button><button class="btn ghost" data-t="5">ميزات التطبيق</button><button class="btn ghost" data-t="6">المساعد الذكي</button><button class="btn ghost" data-t="7">المدن</button></div>
 
  <div id="t1">
   <input id="qs" placeholder="ابحث في نصوص الأذكار…" style="margin-bottom:10px">
@@ -107,6 +107,17 @@ label{display:block;color:var(--mut);font-size:13px;margin:8px 0 3px}
 <div class="card"><div id="cb" style="min-height:240px;max-height:52vh;overflow:auto"></div><div class="cats" id="cx" style="margin-top:8px"></div>
 <textarea id="ci" placeholder="مثال: اجعل إعلان التطبيق «رمضان كريم» وأظهره" style="min-height:76px;font-size:16px;line-height:1.7"></textarea>
 <div class="row" style="margin-top:8px"><button class="btn" id="cs">إرسال</button><button class="btn ghost" id="cc">محادثة جديدة</button></div><p class="mut" style="margin-top:6px">Ctrl+Enter للإرسال. راجع كل تعديل قبل الموافقة، وخصوصاً النصوص الدينية.</p></div></div>
+<div id="t7" class="hide">
+ <div class="card"><h2>مدن الولايات</h2><p class="mut">اختر الدولة والولاية ثم أضف مدنها. تظهر في التطبيق كقائمة ثالثة «المدينة» تحت الولاية، وتُحسب المواقيت والقبلة بإحداثياتها الدقيقة. زر «جلب الإحداثيات» تلقائي، فراجع النتيجة قبل الحفظ.</p>
+  <label>الدولة</label><select id="ctc"></select>
+  <label>الولاية / المنطقة</label><select id="ctr"></select></div>
+ <div class="card"><h2 id="cth"></h2><div id="ctl"></div>
+  <div class="row"><button class="btn ghost" id="cta">+ مدينة</button><button class="btn ghost" id="ctho">إخفاء الكل</button><button class="btn ghost" id="ctsh">إظهار الكل</button></div></div>
+ <div class="card"><h2>إضافة عدة مدن دفعة واحدة</h2><p class="mut">اكتب اسم مدينة في كل سطر وسأجلب إحداثياتها تلقائياً. أو اكتب: الاسم، خط العرض، خط الطول.</p>
+  <textarea id="ctt" style="min-height:90px;font-size:16px;line-height:1.8" placeholder="مثال:&#10;برج الكيفان&#10;الرغاية"></textarea>
+  <div style="margin-top:10px"><button class="btn" id="ctb">إضافة وجلب الإحداثيات</button></div></div>
+ <div class="card"><button class="btn" id="cts">حفظ كل المدن</button><p class="mut" style="margin-top:6px">لا يظهر أي تغيير في التطبيق قبل الحفظ. المدينة المُخفاة تبقى هنا ولا تظهر للمستخدمين.</p></div>
+</div>
 <div id="t3" class="hide">
   <div class="card" id="cfgcard"><h2>مفاتيح الإعدادات (JSON)</h2><p class="mut">كل مفتاح له قيمة JSON يمكنك تعديلها أو مسحها.</p><div id="cfgl" style="margin-top:10px"></div><button class="btn ghost" id="cnew">+ مفتاح جديد</button></div>
   <div class="card"><h2>الأذكار بصيغة JSON</h2><p class="mut">الصيغة: [{"category":"الصباح","title":null,"body":"…","times":3,"active":true}]</p>
@@ -210,7 +221,7 @@ function drawCfg(){
   if(miss)return;
   var a=cget('announcement')||{},m=cget('maintenance')||{};
   $('an_t').value=a.text||'';$('an_s').checked=!!a.show;$('mt_t').value=m.text||'';$('mt_s').checked=!!m.on;
-  drawUi();drawMu();drawRm();drawFt();var L=$('cfgl');L.innerHTML='';
+  drawUi();drawMu();drawRm();drawFt();drawCt();var L=$('cfgl');L.innerHTML='';
   cfg.forEach(function(r){var c=mk('div','card');c.appendChild(mk('label',null,'المفتاح: '+r.key));
     var t=mk('textarea','ltr');t.value=JSON.stringify(r.value,null,2);c.appendChild(t);
     var row=mk('div','row');row.style.marginTop='8px';
@@ -315,7 +326,7 @@ $('bf').onchange=function(){var f=this.files[0];if(!f)return;var fr=new FileRead
 /* ===== التبويبات والجلسة ===== */
 [].forEach.call(document.querySelectorAll('#tabs button'),function(b){b.onclick=function(){
   [].forEach.call(document.querySelectorAll('#tabs button'),function(x){x.classList.toggle('on',x==b);x.classList.toggle('ghost',x!=b)});
-  ['1','2','3','4','5','6'].forEach(function(n){$('t'+n).classList.toggle('hide',n!=b.dataset.t)})}});
+  ['1','2','3','4','5','6','7'].forEach(function(n){$('t'+n).classList.toggle('hide',n!=b.dataset.t)})}});
 if(ready()){try{var s=sessionStorage.getItem('rt');if(s){auth({refresh_token:s},'refresh_token').then(function(j){setSession(j);enter()}).catch(function(){})}}catch(e){}}
 
 /* ===== ميزات التطبيق الجديدة ===== */
@@ -486,6 +497,75 @@ bub('bt','مرحباً. اكتب لي ما تريد تغييره في التطب
 /* خروج تلقائي بعد ٢٠ دقيقة دون نشاط */
 var _idle=null;function _rst(){clearTimeout(_idle);_idle=setTimeout(function(){if(tok){tok=rt=null;try{sessionStorage.removeItem('rt')}catch(e){}location.reload()}},20*60*1000)}
 ['click','keydown','touchstart'].forEach(function(ev){addEventListener(ev,_rst,true)});_rst();
+
+/* ===== مدن الولايات ===== */
+var GEOA=[{"c":"DZ","n":"الجزائر","r":["أدرار","الشلف","الأغواط","أم البواقي","باتنة","بجاية","بسكرة","بشار","البليدة","البويرة","تمنراست","تبسة","تلمسان","تيارت","تيزي وزو","الجزائر","الجلفة","جيجل","سطيف","سعيدة","سكيكدة","سيدي بلعباس","عنابة","قالمة","قسنطينة","المدية","مستغانم","المسيلة","معسكر","ورقلة","وهران","البيض","إليزي","برج بوعريريج","بومرداس","الطارف","تندوف","تيسمسيلت","الوادي","خنشلة","سوق أهراس","تيبازة","ميلة","عين الدفلى","النعامة","عين تموشنت","غرداية","غليزان","تيميمون","برج باجي مختار","أولاد جلال","بني عباس","إن صالح","إن قزام","تقرت","جانت","المغير","المنيعة","أفلو","بريكة","القنطرة","بئر العاتر","العريشة","قصر الشلالة","عين وسارة","مسعد","قصر البخاري","بوسعادة","الأبيض سيدي الشيخ"]},{"c":"SA","n":"السعودية","r":["الرياض","مكة المكرمة","المدينة المنورة","القصيم","الشرقية","عسير","تبوك","حائل","الحدود الشمالية","جازان","نجران","الباحة","الجوف"]},{"c":"EG","n":"مصر","r":["القاهرة","الجيزة","الإسكندرية","الدقهلية","الشرقية","المنوفية","القليوبية","البحيرة","كفر الشيخ","الغربية","الإسماعيلية","بورسعيد","السويس","دمياط","شمال سيناء","جنوب سيناء","مطروح","الوادي الجديد","الفيوم","بني سويف","المنيا","أسيوط","سوهاج","قنا","الأقصر","أسوان","البحر الأحمر"]},{"c":"MA","n":"المغرب","r":["طنجة","الحسيمة","الشرق","فاس","الرباط","بني ملال","الدار البيضاء","مراكش","درعة تافيلالت","أكادير","كلميم","العيون","الداخلة"]},{"c":"IQ","n":"العراق","r":["بغداد","البصرة","نينوى","السليمانية","أربيل","النجف","كربلاء","الأنبار","ديالى","كركوك","بابل","ذي قار","ميسان","واسط","المثنى","الديوانية","دهوك","حلبجة","صلاح الدين"]},{"c":"SD","n":"السودان","r":["الخرطوم","الجزيرة","النيل الأبيض","النيل الأزرق","سنار","شمال كردفان","جنوب كردفان","غرب كردفان","شمال دارفور","جنوب دارفور","شرق دارفور","وسط دارفور","غرب دارفور","البحر الأحمر","كسلا","القضارف","نهر النيل","الشمالية"]},{"c":"SY","n":"سوريا","r":["دمشق","ريف دمشق","حلب","حمص","حماة","اللاذقية","طرطوس","إدلب","دير الزور","الرقة","الحسكة","درعا","السويداء","القنيطرة"]},{"c":"YE","n":"اليمن","r":["صنعاء","عدن","تعز","الحديدة","إب","أبين","الضالع","البيضاء","الجوف","حجة","حضرموت","ذمار","شبوة","صعدة","عمران","لحج","مأرب","المحويت","ريمة","سقطرى","المهرة"]},{"c":"JO","n":"الأردن","r":["عمان","إربد","الزرقاء","المفرق","السلط","مادبا","الكرك","الطفيلة","معان","العقبة","جرش","عجلون"]},{"c":"AE","n":"الإمارات","r":["أبوظبي","دبي","الشارقة","عجمان","أم القيوين","رأس الخيمة","الفجيرة"]},{"c":"LY","n":"ليبيا","r":["طرابلس","بنغازي","مصراتة","الزاوية","سبها","سرت","الجفرة","المرج","طبرق","غريان","زليتن","الخمس","درنة","البيضاء","صبراتة"]},{"c":"TN","n":"تونس","r":["تونس","أريانة","بن عروس","منوبة","نابل","زغوان","بنزرت","باجة","جندوبة","الكاف","سليانة","سوسة","المنستير","المهدية","صفاقس","القيروان","القصرين","سيدي بوزيد","قابس","مدنين","تطاوين","قفصة","توزر","قبلي"]},{"c":"SO","n":"الصومال","r":["مقديشو","هيران","غلغدود","مدج","نغال","باري","سناج","سول","توغدير","شبيلي الوسطى","شبيلي السفلى","جوبا الوسطى","جوبا السفلى","باي","بكول"]},{"c":"DJ","n":"جيبوتي","r":["جيبوتي","علي صبيح","ديكيل","تاجورة","أوبوك","أرتا"]},{"c":"BH","n":"البحرين","r":["العاصمة","المحرق","الشمالية","الجنوبية"]},{"c":"QA","n":"قطر","r":["الدوحة","الريان","الوكرة","الخور","أم صلال","الضعاين","الشمال","الشيحانية"]},{"c":"KM","n":"جزر القمر","r":["أنجوان","موهيلي","غراند كومور"]},{"c":"OM","n":"عمان","r":["مسقط","ظفار","مسندم","البريمي","الداخلية","شمال الباطنة","جنوب الباطنة","شمال الشرقية","جنوب الشرقية","الظاهرة","الوسطى"]},{"c":"KW","n":"الكويت","r":["العاصمة","حولي","الفروانية","الجهراء","مبارك الكبير","الأحمدي"]},{"c":"MR","n":"موريتانيا","r":["نواكشوط","الحوض الشرقي","الحوض الغربي","لبراكنة","ترارزة","كوركول","غيديماغا","لعصابة","تكانت","آدرار","تيرس زمور","نواذيبو","إينشيري"]},{"c":"PS","n":"فلسطين","r":["القدس","رام الله","جنين","نابلس","طولكرم","قلقيلية","سلفيت","طوباس","أريحا","بيت لحم","الخليل","غزة","شمال غزة","خان يونس","دير البلح","رفح"]},{"c":"LB","n":"لبنان","r":["بيروت","جبل لبنان","الشمال","البقاع","النبطية","الجنوب","عكار","بعلبك الهرمل"]},{"c":"TR","n":"تركيا","r":["أضنة","أديامان","أفيون قره حصار","آغري","أماسيا","أنقرة","أنطاليا","أرتفين","أيدن","بالكيسير","بيلجيك","بينغول","بتليس","بولو","بوردور","بورصة","جناق قلعة","جانقري","تشوروم","دنيزلي","ديار بكر","أدرنة","ألازيغ","أرزنجان","أرضروم","أسكي شهر","غازي عنتاب","غيرسون","غوموش خانة","حكاري","هاتاي","إسبارطة","مرسين","إسطنبول","إزمير","قارص","قسطموني","قيصري","كيركلاريلي","كيرشهير","كوجالي","قونية","كوتاهية","ملاطية","مانيسا","قهرمان مرعش","ماردين","موغلا","موش","نفشهير","نيغدة","أوردو","ريزه","صقاريا","سامسون","سيرت","سينوب","سيواس","تكيرداغ","توكات","طرابزون","تونجلي","شانلي أورفا","أوشاق","فان","يوزغات","زونغولداق","عقسراي","بايبورت","قره مان","قيرق قلعة","باتمان","شرناق","بارتين","أرداهان","إغدير","يالوفا","قره بوك","كيليس","عثمانية","دوزجه"]},{"c":"ID","n":"إندونيسيا","r":["آتشيه","سومطرة الشمالية","سومطرة الغربية","رياو","جزر رياو","جامبي","سومطرة الجنوبية","بنغكولو","لامبونغ","جزر بانغكا بليتونغ","جاكرتا","جاوة الغربية","جاوة الوسطى","يوغياكارتا","جاوة الشرقية","بانتن","بالي","نوسا تنغارا الغربية","نوسا تنغارا الشرقية","كاليمانتان الغربية","كاليمانتان الوسطى","كاليمانتان الجنوبية","كاليمانتان الشرقية","كاليمانتان الشمالية","سولاويسي الشمالية","سولاويسي الوسطى","سولاويسي الجنوبية","سولاويسي الجنوبية الشرقية","غورونتالو","سولاويسي الغربية","مالوكو","شمال مالوكو","بابوا","بابوا الغربية","بابوا الوسطى","بابوا الجبلية","بابوا الجنوبية","بابوا الغربية الجنوبية"]},{"c":"PK","n":"باكستان","r":["إسلام آباد","البنجاب","السند","خيبر بختونخوا","بلوشستان","آزاد كشمير","غيلغيت بالتستان"]},{"c":"BD","n":"بنغلاديش","r":["دكا","تشيتاغونغ","راجشاهي","خولنا","باريسال","سيلهيت","رانغبور","ميمنسينغ"]},{"c":"IR","n":"إيران","r":["طهران","أصفهان","خراسان رضوي","خراسان الشمالية","خراسان الجنوبية","فارس","أذربيجان الشرقية","أذربيجان الغربية","خوزستان","مازندران","كيلان","كرمان","كرمانشاه","همدان","يزد","لرستان","هرمزغان","سيستان وبلوشستان","زنجان","قزوين","قم","البرز","مركزي","أردبيل","كردستان","إيلام","جهارمحال وبختياري","كهكيلويه وبوير أحمد","بوشهر","سمنان","غلستان"]},{"c":"MY","n":"ماليزيا","r":["كوالالمبور","بوتراجايا","لابوان","سيلانغور","جوهور","قدح","كلنتن","ملاكا","نيجيري سمبيلان","باهانغ","بينانغ","بيراك","برليس","صباح","ساراواك","ترنغانو"]},{"c":"NG","n":"نيجيريا","r":["أبوجا","أبيا","أداماوا","أكوا إيبوم","أنامبرا","باوتشي","بايلسا","بنوي","بورنو","كروس ريفر","دلتا","إيبوني","إيدو","إيكيتي","إنوغو","غومبي","إيمو","جيغاوا","كادونا","كانو","كاتسينا","كيبي","كوغي","كوارا","لاغوس","ناساراوا","النيجر","أوغون","أوندو","أوسون","أويو","بلاتو","ريفرز","سوكوتو","تارابا","يوبي","زامفارا"]}];
+var CT={},CTC=0,CTR='';
+function ctList(){var c=GEOA[CTC].c;CT[c]=CT[c]||{};return CT[c][CTR]=CT[c][CTR]||[]}
+function drawCt(){
+  CT=JSON.parse(JSON.stringify(cget('cities')||{}));
+  var sc=$('ctc');sc.innerHTML='';
+  GEOA.forEach(function(g,i){var o=mk('option',null,g.n);o.value=i;sc.appendChild(o)});
+  sc.value=CTC;ctRegs()}
+function ctRegs(){
+  var g=GEOA[CTC],sr=$('ctr'),c=g.c;sr.innerHTML='';
+  if(g.r.indexOf(CTR)<0)CTR=g.r[0];
+  g.r.forEach(function(r){var n=(CT[c]&&CT[c][r]||[]).length;var o=mk('option',null,r+(n?' ('+n+')':''));o.value=r;sr.appendChild(o)});
+  sr.value=CTR;ctDraw()}
+function ctFetch(x){
+  var nm=String(x.n||'').trim();
+  if(!nm){x.h='اكتب الاسم أولاً.';return Promise.resolve()}
+  return fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&language=ar&name='+enc(nm)+'&countryCode='+GEOA[CTC].c)
+  .then(function(r){return r.json()}).then(function(j){var r=j.results&&j.results[0];
+    if(!r){x.h='لم أجدها تلقائياً: اكتب الإحداثيات يدوياً (في خرائط جوجل اضغط مطولاً على المكان فتظهر الأرقام).';return}
+    x.la=r.latitude;x.lo=r.longitude;x.h='وُجدت: '+r.name+(r.admin1?' — '+r.admin1:'')+' · راجعها قبل الحفظ'})
+  .catch(function(){x.h='تعذّر الاتصال بخدمة البحث.'})}
+function ctAuto(){
+  var todo=ctList().filter(function(x){return String(x.n||'').trim()&&(x.la===''||x.lo==='')});
+  if(!todo.length){ctDraw();return}
+  say('جارٍ جلب إحداثيات '+todo.length+' مدينة…');
+  var p=Promise.resolve();
+  todo.forEach(function(x){p=p.then(function(){return ctFetch(x)}).then(function(){return new Promise(function(r){setTimeout(r,250)})})});
+  p.then(function(){say('انتهى الجلب. راجع الإحداثيات ثم اضغط «حفظ كل المدن» ✓');ctDraw()})}
+function ctDraw(){
+  var L=$('ctl');L.innerHTML='';var list=ctList();
+  $('cth').textContent=GEOA[CTC].n+' ← '+CTR+' — '+list.length+' مدينة';
+  if(!list.length)L.appendChild(mk('p','mut','لا مدن لهذه الولاية بعد. الولاية نفسها تعمل في التطبيق بإحداثيات مركزها.'));
+  list.forEach(function(x,i){
+    var cd=mk('div','card');
+    cd.appendChild(mk('label',null,'اسم المدينة'));var n=inp(x.n);n.oninput=function(){x.n=n.value};cd.appendChild(n);
+    var r=mk('div','row'),a=mk('div'),b=mk('div');
+    a.appendChild(mk('label',null,'خط العرض'));var la=inp(x.la,null,'ltr');la.oninput=function(){x.la=la.value};a.appendChild(la);
+    b.appendChild(mk('label',null,'خط الطول'));var lo=inp(x.lo,null,'ltr');lo.oninput=function(){x.lo=lo.value};b.appendChild(lo);
+    r.appendChild(a);r.appendChild(b);cd.appendChild(r);
+    if(x.h){var h=mk('p','mut',x.h);h.style.marginTop='4px';cd.appendChild(h)}
+    var ck=chk(cd,'ظاهرة في التطبيق',x.on!==false);ck.onchange=function(){x.on=ck.checked};
+    var ac=mk('div','row');ac.style.marginTop='10px';
+    ac.appendChild(btn('جلب الإحداثيات','ghost',function(){say('جارٍ البحث…');ctFetch(x).then(function(){say('');ctDraw()})}));
+    ac.appendChild(btn('حذف','danger',function(){if(confirm('حذف «'+(x.n||'')+'»؟')){list.splice(i,1);ctDraw()}}));
+    cd.appendChild(ac);L.appendChild(cd)})}
+$('ctc').onchange=function(){CTC=parseInt(this.value)||0;CTR='';ctRegs()};
+$('ctr').onchange=function(){CTR=this.value;ctDraw()};
+$('cta').onclick=function(){ctList().push({n:'',la:'',lo:'',on:true});ctDraw()};
+$('ctho').onclick=function(){ctList().forEach(function(x){x.on=false});ctDraw()};
+$('ctsh').onclick=function(){ctList().forEach(function(x){x.on=true});ctDraw()};
+$('ctb').onclick=function(){
+  var list=ctList(),ls=$('ctt').value.split('\n').map(function(s){return s.trim()}).filter(Boolean);
+  if(!ls.length)return;
+  ls.forEach(function(l){var p=l.split(/[,،]/).map(function(s){return s.trim()});list.push({n:p[0],la:p[1]||'',lo:p[2]||'',on:true})});
+  $('ctt').value='';ctAuto()};
+$('cts').onclick=function(){
+  var out={},bad=null;
+  Object.keys(CT).forEach(function(c){Object.keys(CT[c]).forEach(function(r){
+    var arr=[];
+    CT[c][r].forEach(function(x){
+      var n=String(x.n||'').trim();if(!n)return;
+      var la=parseFloat(x.la),lo=parseFloat(x.lo);
+      if(!isFinite(la)||!isFinite(lo)||Math.abs(la)>90||Math.abs(lo)>180){bad=bad||('إحداثيات «'+n+'» ناقصة أو غير صالحة.');return}
+      arr.push({n:n,la:+la.toFixed(4),lo:+lo.toFixed(4),on:x.on!==false})});
+    if(arr.length){(out[c]=out[c]||{})[r]=arr}})});
+  if(bad){say(bad,1);return}
+  cset('cities',out).then(done('تم حفظ المدن ✓')).catch(err)};
 </script>
 </body>
 </html>
