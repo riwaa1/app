@@ -148,8 +148,9 @@ body.light .rv-pb{background:rgba(0,0,0,.1)}
 <div class="row" style="margin-bottom:10px">
 <button class="btn" id="loc">حدّد موقعي</button></div>
 <div class="card"><p class="mut">اختر بلدك ومنطقتك، أو اكتب اسم مدينتك</p>
-<div class="row"><select id="gc"><option value="">الدولة</option></select><select id="gr"><option value="">الولاية / المنطقة</option></select><select id="gct"><option value="">المدينة</option></select></div>
-<div class="row" style="margin-top:8px"><input type="text" id="gq" placeholder="أو اكتب اسم مدينتك"><button class="btn" id="gb">اعتمد</button></div></div>
+<div class="row"><select id="gc"><option value="">الدولة</option></select><select id="gr"><option value="">الولاية / المنطقة</option></select></div>
+<div class="row" style="margin-top:8px" id="gcirow" hidden><select id="gci"><option value="">المدينة / الدائرة (اختياري)</option></select></div>
+ <div class="row" style="margin-top:8px"><input type="text" id="gq" placeholder="أو اكتب اسم مدينتك"><button class="btn" id="gb">اعتمد</button></div></div>
 <div id="tm" class="card"></div>
 <p class="mut" id="ps"></p>
 <label class="row mut"><input type="checkbox" id="silent"> وضع الصلاة: تنبيه بالكتم عند دخول الوقت</label>
@@ -247,7 +248,7 @@ function fetchT(){
  .then(function(r){return r.json()}).then(function(j){T=j.data.timings;sv('times',T);sv('tday',nd(new Date()));$('ps').textContent='';drawT()})
  .catch(function(){var c=calcT(new Date(),LOC.la,LOC.lo,METH);if(c&&(!T||ld('tday','')!==nd(new Date()))){T=c;drawT();$('ps').textContent='لا اتصال: حُسبت المواقيت تقريباً على جهازك.'}else $('ps').textContent=T?'لا اتصال: تُعرض آخر مواقيت محفوظة.':'تحتاج اتصالاً بالإنترنت لأول مرة.'});
 }
-$('loc').onclick=function(){navigator.geolocation.getCurrentPosition(function(p){var la0=p.coords.latitude,lo0=p.coords.longitude;METH=(la0>18.9&&la0<37.2&&lo0>-8.7&&lo0<12)?19:3;LOC={la:la0,lo:lo0,m:METH};sv('loc',LOC);fetchT();qibla()},function(){$('ps').textContent='تعذّر تحديد الموقع. فعّل صلاحية الموقع.'})};
+$('loc').onclick=function(){navigator.geolocation.getCurrentPosition(function(p){METH=3;LOC={la:p.coords.latitude,lo:p.coords.longitude,m:3};sv('loc',LOC);fetchT();qibla()},function(){$('ps').textContent='تعذّر تحديد الموقع. فعّل صلاحية الموقع.'})};
 function nextP(){
  if(!T)return null;var d=new Date(),best=null,k;
  for(k in AR){if(k=='Sunrise')continue;var h=T[k].slice(0,5).split(':'),t=new Date(d);t.setHours(+h[0],+h[1],0,0);if(t>d){best={n:AR[k],t:t};break}}
@@ -417,8 +418,7 @@ function rcheck(){try{
 $('rmn').onclick=function(){if(!('Notification' in window)){$('rmi').textContent='متصفحك لا يدعم الإشعارات.';return}Notification.requestPermission().then(function(p){$('rmi').textContent=p=='granted'?'تم تفعيل إشعارات الهاتف ✓':'لم يُسمح بالإشعارات.'})};
 $('rmt').onclick=function(){ral('حان وقت أذكار الصباح','هكذا يظهر التنبيه لك.','الصباح',false);beep(880,.5,.14)};
 setInterval(rcheck,5000);setTimeout(rcheck,1500);
-if(LOC&&ld('tday','')!==nd(new Date())){sv('tday',nd(new Date()));fetchT()}
-setInterval(function(){if(LOC&&ld('tday','')!==nd(new Date())){sv('tday',nd(new Date()));fetchT()}},60000);
+if(LOC&&ld('tday','')!=new Date().toDateString()){sv('tday',new Date().toDateString());fetchT()}
 /* ---- شريط تقدّم الصلاة القادمة ---- */
 function prevT(){var d=new Date(),best=null;
   ['Fajr','Dhuhr','Asr','Maghrib','Isha'].forEach(function(k){var h=T[k].slice(0,5).split(':'),x=new Date(d);x.setHours(+h[0],+h[1],0,0);if(x<=d)best=x});
@@ -518,10 +518,7 @@ function geo(name,cc){$('ps').textContent='جارٍ البحث عن «'+name+'»
   if(!r){if(!approx(cc,name,'لم أجد «'+name+'» بدقة، فاستخدمتُ عاصمة الدولة (تقريبي). اكتب اسم مدينة قريبة لدقة أفضل.'))$('ps').textContent='لم أجد «'+name+'». جرّب اسم مدينة قريبة.';return}
   METH=MM[cc]||3;LOC={la:r.latitude,lo:r.longitude,nm:name,m:METH};sv('loc',LOC);fetchT();qibla()})
  .catch(function(){if(!approx(cc,name,'لا اتصال بخدمة البحث، فاستخدمتُ عاصمة الدولة لحساب القبلة (تقريبي).'))$('ps').textContent='تعذّر البحث. تحقق من الاتصال بالإنترنت.'})}
-var DZC={'أفلو':[34.11,2.10],'بريكة':[35.64,5.34],'القنطرة':[35.21,5.71],'بئر العاتر':[34.74,8.06],'العريشة':[34.22,-1.26],'قصر الشلالة':[35.22,2.32],'عين وسارة':[35.45,2.90],'مسعد':[34.16,3.50],'قصر البخاري':[35.88,2.75],'بوسعادة':[35.21,4.18],'الأبيض سيدي الشيخ':[32.88,0.55],'إن صالح':[27.20,2.48],'إن قزام':[19.57,5.77],'جانت':[24.55,9.48],'تيميمون':[29.26,0.23],'برج باجي مختار':[21.33,0.93],'أولاد جلال':[34.43,5.07],'بني عباس':[30.13,-2.17],'تقرت':[33.10,6.06],'المغير':[33.95,5.92],'المنيعة':[30.58,2.88]};
-$('gr').onchange=function(){if(!this.value)return;var cc=GEO[$('gc').value].c,c=cc==='DZ'&&DZC[this.value];
- if(c){METH=MM.DZ;LOC={la:c[0],lo:c[1],nm:this.value,m:METH};sv('loc',LOC);fetchT();qibla();return}
- geo(this.value,cc)};
+$('gr').onchange=function(){if(this.value)geo(this.value,GEO[$('gc').value].c)};
 $('gb').onclick=function(){var q=$('gq').value.trim();if(q)geo(q,$('gc').value!==''?GEO[$('gc').value].c:'')};
 /* ---- قوائم اختيار بتصميم التطبيق ---- */
 function enhance(sel){var b=document.createElement('button');b.type='button';b.className='sb';sel.style.display='none';sel.parentNode.insertBefore(b,sel.nextSibling);
@@ -555,7 +552,7 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden)rche
 document.addEventListener('click',function(){if('Notification' in window&&Notification.permission==='default'&&!ld('askn',false)){sv('askn',true);try{Notification.requestPermission()}catch(e){}}},{once:true});
 
 /* ===== تنبيهات أندرويد الأصلية (تعمل والتطبيق مغلق) ===== */
-var NSND='1'=='1',NATIVE=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()),
+var NSND='__SOUND__'=='1',NATIVE=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()),
 LN=NATIVE&&Capacitor.Plugins&&Capacitor.Plugins.LocalNotifications,NT={},NBUSY=false,NTM=null;
 function nd(d){return String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+d.getFullYear()}
 var NTC=ld('ntc',{});
@@ -777,9 +774,9 @@ function showPrayer(name,time){if(PRAY)return;name=name||'الصلاة';
  sb.className='btn ghost';sb.textContent='ذكّرني بعد '+(PSC.snooze||10)+' دقائق';
  xb.className='btn';xb.textContent='تم، سأصلّي الآن';xb.style.cssText='min-width:200px;font-size:18px';
  function play(){var sel=$('muez'),nm=sel&&sel.value,z=(typeof MZ!=='undefined'&&MZ.filter(function(x){return x.name==nm})[0])||(typeof MZ!=='undefined'&&MZ[0]),u=z&&z.url;
-  if(!u)u='adhan.mp3';
+  if(!u){nt.textContent='لا يتوفر ملف صوت للأذان حالياً.';return}
   try{if(MA){MA.pause()}}catch(e){}
-  MA=new Audio(u);MA.onended=function(){MA=null};MA.onerror=function(){if(!/adhan\.mp3$/.test((MA&&MA.src)||'')){MA=new Audio('adhan.mp3');MA.onended=function(){MA=null};MA.play().catch(function(){nt.textContent='تعذّر تشغيل الأذان.'});return}nt.textContent='تعذّر تشغيل الأذان. تحقق من الإنترنت.'};
+  MA=new Audio(u);MA.onended=function(){MA=null};MA.onerror=function(){nt.textContent='تعذّر تشغيل الأذان. تحقق من الإنترنت.'};
   var pr=MA.play();if(pr&&pr.catch)pr.catch(function(){pb.style.display='inline-block'})}
  pb.onclick=function(){pb.style.display='none';play()};
  xb.onclick=pstop;
@@ -824,26 +821,33 @@ async function ardy(){var L=[],p,f,b=null;
  try{if(b&&!b.ignoring&&confirm('السماح للتطبيق بالعمل دون قيود بطارية؟')){await RA.requestIgnoreBattery();return}}catch(e){}
  try{await RA.openAppSettings()}catch(e){}}
 $('rdy').onclick=ardy;
-/* ===== مدن الولايات (تُدار من لوحة التحكم) ===== */
-var CTL=[];
-function cityFill(restore){
-  var sel=$('gct'),b=sel.nextSibling,C=(ld('cfg',{})||{}).cities||{},g=GEO[$('gc').value],r=$('gr').value,
-  arr=(g&&r&&C[g.c]&&C[g.c][r])||[];
-  CTL=arr.filter(function(x){return x&&x.n&&x.on!==false&&isFinite(x.la)&&isFinite(x.lo)});
-  sel.innerHTML='<option value="">المدينة</option>';
-  CTL.forEach(function(x,i){var op=document.createElement('option');op.value=i;op.textContent=x.n;sel.appendChild(op)});
-  if(b&&b.className=='sb')b.style.display=CTL.length?'':'none';
-  var sc=restore&&ld('selc',null);
-  if(sc)CTL.forEach(function(x,i){if(x.n==sc)sel.value=i});
-  if(sel._upd)sel._upd()}
-enhance($('gct'));
-$('gct').onchange=function(){var c=CTL[this.value],g=GEO[$('gc').value];if(!c||!g)return;
-  METH=MM[g.c]||3;LOC={la:+c.la,lo:+c.lo,nm:c.n,m:METH};sv('loc',LOC);sv('selc',c.n);fetchT();qibla()};
-$('gc').addEventListener('change',function(){sv('selc',null);cityFill()});
-$('gr').addEventListener('change',function(){sv('selc',null);cityFill()});
-var _ac3=applyCfg;applyCfg=function(c){_ac3(c);try{cityFill(true)}catch(e){}};
-cityFill(true);
 
+/* ===== الجزائر: ٦٩ ولاية + مدن ودوائر كل ولاية ===== */
+var DZD={"أدرار": ["أدرار", "رقان", "أولف", "زاوية كنتة", "فنوغيل", "تسابيت"], "الشلف": ["الشلف", "تنس", "وادي الفضة", "بوقادير", "عين مران", "أولاد فارس", "الكريمية"], "الأغواط": ["الأغواط", "قصر الحيران", "حاسي الرمل", "سيدي مخلوف", "عين ماضي"], "أم البواقي": ["أم البواقي", "عين البيضاء", "عين مليلة", "عين فكرون", "مسكيانة", "سيقوس"], "باتنة": ["باتنة", "مروانة", "عين التوتة", "نقاوس", "أريس", "تازولت", "المعذر", "رأس العيون"], "بجاية": ["بجاية", "أقبو", "الخراطة", "سيدي عيش", "أميزور", "القصر", "تيشي", "سوق الإثنين"], "بسكرة": ["بسكرة", "طولقة", "سيدي عقبة", "زريبة الوادي", "فوغالة", "جمورة", "مشونش"], "بشار": ["بشار", "القنادسة", "العبادلة", "تاغيت", "لحمر"], "البليدة": ["البليدة", "بوفاريك", "الأربعاء", "موزاية", "العفرون", "أولاد يعيش", "بوقرة"], "البويرة": ["البويرة", "الأخضرية", "سور الغزلان", "مشد الله", "عين بسام", "حيزر", "قادرية"], "تمنراست": ["تمنراست", "أبلسة", "تاظروك"], "تبسة": ["تبسة", "الونزة", "الشريعة", "العوينات", "مرسط", "الماء الأبيض"], "تلمسان": ["تلمسان", "مغنية", "الغزوات", "الرمشي", "سبدو", "ندرومة", "أولاد ميمون", "منصورة"], "تيارت": ["تيارت", "فرندة", "السوقر", "مهدية", "رحوية", "عين الذهب", "وادي ليلي"], "تيزي وزو": ["تيزي وزو", "عزازقة", "ذراع بن خدة", "ذراع الميزان", "عين الحمام", "الأربعاء ناث إيراثن", "تيقزيرت"], "الجزائر": ["الجزائر الوسطى", "باب الوادي", "حسين داي", "الحراش", "الدار البيضاء", "زرالدة", "الشراقة", "بئر مراد رايس", "الرويبة"], "الجلفة": ["الجلفة", "حاسي بحبح", "دار الشيوخ", "الشارف", "الإدريسية", "حد الصحاري"], "جيجل": ["جيجل", "الطاهير", "الميلية", "العوانة", "زيامة منصورية", "الشقفة", "السطارة"], "سطيف": ["سطيف", "العلمة", "عين ولمان", "بوقاعة", "عين أرنات", "عين الكبيرة", "بني عزيز", "صالح باي", "عين آزال"], "سعيدة": ["سعيدة", "عين الحجر", "يوب", "سيدي بوبكر", "الحساسنة", "أولاد براهيم"], "سكيكدة": ["سكيكدة", "عزابة", "القل", "الحروش", "تمالوس", "رمضان جمال", "عين قشرة"], "سيدي بلعباس": ["سيدي بلعباس", "تلاغ", "سفيزف", "ابن باديس", "رأس الماء", "عين البرد", "مولاي سليسن"], "عنابة": ["عنابة", "البوني", "الحجار", "برحال", "عين الباردة", "شطايبي"], "قالمة": ["قالمة", "وادي الزناتي", "بوشقوف", "هيليوبوليس", "حمام دباغ", "قلعة بوصبع"], "قسنطينة": ["قسنطينة", "الخروب", "علي منجلي", "حامة بوزيان", "ديدوش مراد", "زيغود يوسف", "عين عبيد"], "المدية": ["المدية", "البرواقية", "تابلاط", "بني سليمان", "شلالة العذاورة", "سغوان"], "مستغانم": ["مستغانم", "عين تادلس", "سيدي علي", "عشعاشة", "حاسي ماماش", "بوقيراط", "ماسرة"], "المسيلة": ["المسيلة", "سيدي عيسى", "عين الملح", "مقرة", "حمام الضلعة", "أولاد دراج", "برهوم"], "معسكر": ["معسكر", "سيق", "المحمدية", "تيغنيف", "غريس", "بوحنيفية", "وادي الأبطال"], "ورقلة": ["ورقلة", "حاسي مسعود", "الرويسات", "سيدي خويلد", "انقوسة"], "وهران": ["وهران", "السانيا", "بئر الجير", "أرزيو", "عين الترك", "بطيوة", "قديل", "وادي تليلات"], "البيض": ["البيض", "بوقطب", "بريزينة", "بوعلام", "الرقاصة", "الشلالة"], "إليزي": ["إليزي", "إن أمناس", "برج عمر إدريس", "دبداب"], "برج بوعريريج": ["برج بوعريريج", "رأس الوادي", "المنصورة", "برج الغدير", "مجانة", "بئر قاصد علي"], "بومرداس": ["بومرداس", "برج منايل", "بودواو", "دلس", "الثنية", "خميس الخشنة", "يسر", "الناصرية"], "الطارف": ["الطارف", "القالة", "الذرعان", "البسباس", "بوثلجة", "بن مهيدي"], "تندوف": ["تندوف", "أم العسل"], "تيسمسيلت": ["تيسمسيلت", "ثنية الحد", "برج بونعامة", "لرجام", "خميستي", "العيون"], "الوادي": ["الوادي", "قمار", "الرقيبة", "الرباح", "الدبيلة", "البياضة", "حاسي خليفة", "الطالب العربي"], "خنشلة": ["خنشلة", "قايس", "ششار", "أولاد رشاش", "بوحمامة", "بابار"], "سوق أهراس": ["سوق أهراس", "سدراتة", "مداوروش", "تاورة", "الحدادة", "المشروحة"], "تيبازة": ["تيبازة", "القليعة", "شرشال", "حجوط", "بوسماعيل", "فوكة", "قوراية", "الداموس"], "ميلة": ["ميلة", "شلغوم العيد", "فرجيوة", "تاجنانت", "القرارم قوقة", "وادي العثمانية", "التلاغمة"], "عين الدفلى": ["عين الدفلى", "خميس مليانة", "مليانة", "العطاف", "جندل", "بومدفع", "الروينة"], "النعامة": ["النعامة", "المشرية", "عين الصفراء", "عسلة", "مغرار", "صفيصيفة"], "عين تموشنت": ["عين تموشنت", "بني صاف", "حمام بوحجر", "العامرية", "المالح", "ولهاصة الغرابة"], "غرداية": ["غرداية", "متليلي", "القرارة", "بريان", "بونورة", "ضاية بن ضحوة", "زلفانة"], "غليزان": ["غليزان", "وادي رهيو", "مازونة", "زمورة", "يلل", "سيدي امحمد بن علي", "عمي موسى"], "تيميمون": ["تيميمون", "شروين", "أوقروت", "تنركوك", "قصر قدور"], "برج باجي مختار": ["برج باجي مختار", "تيمياوين"], "أولاد جلال": ["أولاد جلال", "سيدي خالد", "الدوسن", "الشعيبة", "البسباس"], "بني عباس": ["بني عباس", "كرزاز", "إقلي", "تبلبالة", "أولاد خضير", "الوطاء"], "إن صالح": ["إن صالح", "إن غار", "فقارة الزوى"], "إن قزام": ["إن قزام", "تين زواتين"], "تقرت": ["تقرت", "تماسين", "الطيبات", "المقارين", "الحجيرة"], "جانت": ["جانت", "برج الحواس"], "المغير": ["المغير", "جامعة", "سيدي خليل", "أم الطيور", "تندلة"], "المنيعة": ["المنيعة", "حاسي القارة", "حاسي الفحل"], "أفلو": ["أفلو", "قلتة سيدي سعد", "بريدة", "الغيشة", "وادي مرة", "سيدي بوزيد"], "بريكة": ["بريكة", "الجزار", "سقانة", "بيطام", "امدوكال", "عسلة"], "القنطرة": ["القنطرة", "عين زعطوط", "لوطاية", "برانيس"], "بئر العاتر": ["بئر العاتر", "العقلة المالحة", "صفصاف الوسرى", "أم علي"], "العريشة": ["العريشة", "سيدي الجيلالي", "البويهي", "القور"], "قصر الشلالة": ["قصر الشلالة", "زمالة الأمير عبد القادر", "سرغين", "الرشايقة"], "عين وسارة": ["عين وسارة", "البيرين", "حد الصحاري", "بنهار", "سيدي لعجال"], "مسعد": ["مسعد", "فيض البطمة", "قطارة", "سد رحال", "دلدول"], "قصر البخاري": ["قصر البخاري", "عين بوسيف", "عزيز", "الشهبونية", "بوغزول", "أولاد عنتر"], "بوسعادة": ["بوسعادة", "بن سرور", "سيدي عامر", "الهامل", "جبل مساعد", "ولتام"], "الأبيض سيدي الشيخ": ["الأبيض سيدي الشيخ", "البنود", "أربوات", "عين العراك"]},DZP={"أفلو": "الأغواط", "بريكة": "باتنة", "القنطرة": "بسكرة", "بئر العاتر": "تبسة", "العريشة": "تلمسان", "قصر الشلالة": "تيارت", "عين وسارة": "الجلفة", "مسعد": "الجلفة", "قصر البخاري": "المدية", "بوسعادة": "المسيلة", "الأبيض سيدي الشيخ": "البيض"};
+function dzal(n){return n.indexOf('إن ')==0?'عين '+n.slice(3):(n=='الجزائر الوسطى'?'الجزائر':n)}
+function dzd(a,b,c,d){var R=Math.PI/180,x=(c-a)*R,y=(d-b)*R*Math.cos((a+c)*R/2);return Math.sqrt(x*x+y*y)*6371}
+function dzs(name,n){return fetch('https://geocoding-api.open-meteo.com/v1/search?count='+(n||10)+'&language=ar&countryCode=DZ&name='+encodeURIComponent(name)).then(function(r){return r.json()}).then(function(j){return j.results||[]}).catch(function(){return []})}
+async function geoDZ(city,wil){$('ps').textContent='جارٍ البحث عن «'+(city||wil)+'»…';
+ var base=null,tr=[wil,dzal(wil),DZP[wil]].filter(Boolean),i,r,cand=[],pick,note='';
+ for(i=0;i<tr.length&&!base;i++){r=await dzs(tr[i],1);if(r[0]){base=r[0];if(i==2)note=' (استُخدمت الولاية الأم «'+DZP[wil]+'» للإحداثيات)'}}
+ pick=base;
+ if(city&&city!==wil){var q=[city,dzal(city)];for(i=0;i<q.length;i++)cand=cand.concat(await dzs(q[i],10));
+  if(base){cand=cand.filter(function(c){return dzd(base.latitude,base.longitude,c.latitude,c.longitude)<=150}).sort(function(a,b){return dzd(base.latitude,base.longitude,a.latitude,a.longitude)-dzd(base.latitude,base.longitude,b.latitude,b.longitude)});
+   if(cand[0]){pick=cand[0];note=''}else note=' (لم أجد المدينة بدقة، فاستخدمتُ مقر الولاية)'}
+  else if(cand[0])pick=cand[0]}
+ if(!pick){if(!approx('DZ',city||wil,'تعذّر تحديد «'+(city||wil)+'»، فاستخدمتُ العاصمة (تقريبي). اكتب اسم مدينة قريبة لدقة أفضل.'))$('ps').textContent='تعذّر البحث. تحقق من الاتصال بالإنترنت.';return}
+ METH=MM.DZ||3;LOC={la:pick.latitude,lo:pick.longitude,nm:city||wil,m:METH};sv('loc',LOC);fetchT();qibla();$('ps').textContent=note}
+function isDZ(){var g=GEO[$('gc').value];return !!g&&g.c==='DZ'}
+function fillCities(w){var s=$('gci'),L=isDZ()&&DZD[w];s.innerHTML='<option value="">المدينة / الدائرة (اختياري)</option>';
+ if(L)L.forEach(function(c){var o=document.createElement('option');o.textContent=c;s.appendChild(o)});
+ $('gcirow').hidden=!L;if(s._upd)s._upd()}
+enhance($('gci'));
+var _gcc=$('gc').onchange;$('gc').onchange=function(){_gcc.call(this);fillCities('')};
+$('gr').onchange=function(){var w=this.value;if(!w)return;fillCities(w);if(isDZ())geoDZ('',w);else geo(w,GEO[$('gc').value].c)};
+$('gci').onchange=function(){if(this.value)geoDZ(this.value,$('gr').value)};
+$('gci').addEventListener('change',selSave);
+function selSave(){sv('sel',{c:$('gc').value,r:$('gr').value,ci:$('gci').value})}
+(function(){var S=ld('sel',null);if(S&&S.c!==''&&S.c!=null&&GEO[S.c]&&GEO[S.c].c==='DZ'&&S.r){fillCities(S.r);if(S.ci){$('gci').value=S.ci;if($('gci')._upd)$('gci')._upd()}}})();
 </script>
 </body>
 </html>
