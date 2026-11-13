@@ -1,0 +1,14 @@
+{
+  "appId": "com.riwaa.app",
+  "appName": "رِواء",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#0E1514"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "iconColor": "#2FA084"
+    }
+  }
+}
