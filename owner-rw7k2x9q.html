@@ -222,7 +222,7 @@ function drawCfg(){
   if(miss)return;
   var a=cget('announcement')||{},m=cget('maintenance')||{};
   $('an_t').value=a.text||'';$('an_s').checked=!!a.show;$('mt_t').value=m.text||'';$('mt_s').checked=!!m.on;
-  drawUi();drawMu();drawRm();drawFt();drawCt();drawDt();var L=$('cfgl');L.innerHTML='';
+  [drawUi,drawMu,drawRm,drawFt,drawCt,drawDt].forEach(function(f){try{f()}catch(e){console.error(f.name,e)}});var L=$('cfgl');L.innerHTML='';
   cfg.forEach(function(r){var c=mk('div','card');c.appendChild(mk('label',null,'المفتاح: '+r.key));
     var t=mk('textarea','ltr');t.value=JSON.stringify(r.value,null,2);c.appendChild(t);
     var row=mk('div','row');row.style.marginTop='8px';
@@ -354,7 +354,7 @@ function drawFt(){var B=$('ft');B.innerHTML='';
  RECS.forEach(function(x){var o=mk('option',null,x[1]);o.value=x[0];rc.appendChild(o)});rc.value=a.reciter||RECS[0][0];fld(c,'القارئ',rc);
  var sn=fld(c,'مدة الغفوة (بالدقائق)',inp(a.snooze||5,'number'));
  PRS=(Array.isArray(a.presets)&&a.presets.length?a.presets:ALP0).map(function(x){return x.slice()});
- c.appendChild(mk('label',null,'الآيات التي يختار منها المستخدم (الاسم · رقم السورة · رقم الآية · عدد الآيات)'));pl.id='prl';c.appendChild(pl);preEd();r.style.marginTop='10px';
+ c.appendChild(mk('label',null,'الآيات التي يختار منها المستخدم (الاسم · رقم السورة · رقم الآية · عدد الآيات)'));pl.id='prl';c.appendChild(pl);B.appendChild(c);preEd();r.style.marginTop='10px';
  r.appendChild(btn('+ آية','ghost',function(){PRS.push(['',1,1,1]);preEd()}));
  r.appendChild(btn('حفظ','',function(){var p=PRS.filter(function(x){return String(x[0]).trim()&&x[1]>=1&&x[1]<=114&&x[2]>=1&&x[3]>=1&&x[3]<=20}).map(function(x){return[String(x[0]).trim(),x[1],x[2],x[3]]});
   if(!p.length){say('أضف آية صالحة واحدة على الأقل.',1);return}
