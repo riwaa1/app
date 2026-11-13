@@ -46,6 +46,20 @@ jobs:
           rm -rf android
           npx cap add android
 
+      - name: Set app name and icon
+        run: |
+          RES=android/app/src/main/res
+          sudo apt-get install -y imagemagick > /dev/null
+          sed -i 's#<string name="app_name">[^<]*</string>#<string name="app_name">رِواء</string>#' $RES/values/strings.xml
+          sed -i 's#<string name="title_activity_main">[^<]*</string>#<string name="title_activity_main">رِواء</string>#' $RES/values/strings.xml
+          for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
+            dir=${d%%:*}
+            size=${d##*:}
+            convert icon-512.png -resize ${size}x${size} $RES/mipmap-$dir/ic_launcher.png
+            cp $RES/mipmap-$dir/ic_launcher.png $RES/mipmap-$dir/ic_launcher_round.png
+          done
+          rm -f $RES/mipmap-anydpi-v26/ic_launcher.xml $RES/mipmap-anydpi-v26/ic_launcher_round.xml
+
       - name: Apply native RiwaaAlarm code
         run: |
           bash .github/native-android.sh
@@ -55,7 +69,7 @@ jobs:
           mkdir -p android/app/src/main/res/raw
           cp adhan.mp3 android/app/src/main/res/raw/adhan.mp3
 
-      - name: Sync web assets
+      - name: Sync into Android
         run: npx cap sync android
 
       - name: Build debug APK
