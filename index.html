@@ -233,7 +233,25 @@ function tab(t){[].forEach.call(document.querySelectorAll('.scr'),function(s){s.
 
 /* ---- التاريخ والآية ---- */
 var now=new Date();
-$('dt').textContent=new Intl.DateTimeFormat('ar-SA-u-ca-islamic',{dateStyle:'full'}).format(now)+' — '+new Intl.DateTimeFormat('ar',{dateStyle:'long'}).format(now);
+var DT_G={std:['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'],lev:['كانون الثاني','شباط','آذار','نيسان','أيار','حزيران','تموز','آب','أيلول','تشرين الأول','تشرين الثاني','كانون الأول'],mag:['جانفي','فيفري','مارس','أفريل','ماي','جوان','جويلية','أوت','سبتمبر','أكتوبر','نوفمبر','ديسمبر']};
+var DT_H=['محرم','صفر','ربيع الأول','ربيع الآخر','جمادى الأولى','جمادى الآخرة','رجب','شعبان','رمضان','شوال','ذو القعدة','ذو الحجة'];
+var DT_W=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+var DT0={gShow:true,hShow:true,first:'h',gMonths:'std',digits:'latn',hCal:'umalqura',hOff:0,gOff:0,weekday:true};
+function dtNum(s,d){s=String(s);return d=='arab'?s.replace(/\d/g,function(x){return '٠١٢٣٤٥٦٧٨٩'.charAt(x)}):s}
+function dtCalc(c,now){
+  c=Object.assign({},DT0,c||{});now=now||new Date();
+  var y=now.getFullYear(),m=now.getMonth(),d=now.getDate();
+  var g=new Date(y,m,d+(+c.gOff||0),12),h=new Date(y,m,d+(+c.hOff||0),12);
+  var o={};try{new Intl.DateTimeFormat('en-u-ca-islamic-'+c.hCal+'-nu-latn',{day:'numeric',month:'numeric',year:'numeric'}).formatToParts(h).forEach(function(p){o[p.type]=p.value})}catch(e){}
+  var wd=c.weekday?DT_W[g.getDay()]+' ':'';
+  var gs=wd+dtNum(g.getDate(),c.digits)+' '+(DT_G[c.gMonths]||DT_G.std)[g.getMonth()]+' '+dtNum(g.getFullYear(),c.digits)+'م';
+  var hs=o.day?dtNum(+o.day,c.digits)+' '+DT_H[(+o.month||1)-1]+' '+dtNum(o.year,c.digits)+'هـ':'';
+  var parts=[];
+  if(c.first=='g'){if(c.gShow)parts.push(gs);if(c.hShow&&hs)parts.push(hs)}else{if(c.hShow&&hs)parts.push(hs);if(c.gShow)parts.push(gs)}
+  return{g:gs,h:hs,text:parts.join(' — ')}}
+function drawDate(c){var e=$('dt');if(!e)return;try{e.textContent=dtCalc(c).text}catch(x){e.textContent=new Intl.DateTimeFormat('ar',{dateStyle:'long'}).format(new Date())}}
+drawDate((ld('cfg',{})||{}).dates);
+setInterval(function(){drawDate((ld('cfg',{})||{}).dates)},60000);
 var V=[['فَإِنَّ مَعَ الْعُسْرِ يُسْرًا','الشرح ٥'],['أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ','الرعد ٢٨'],['وَقُل رَّبِّ زِدْنِي عِلْمًا','طه ١١٤']];
 var vd=V[Math.floor(now/864e5)%V.length];$('vt').textContent=vd[0];$('vl').textContent='آية اليوم — '+vd[1];
 
@@ -441,7 +459,7 @@ function syncA(){
 syncA();
 
 function applyCfg(c){
-  ui(c);
+  ui(c);drawDate(c.dates);
   var o=document.getElementById('rv-bn');if(o)o.remove();
   var a=c.announcement,m=c.maintenance;
   if(a&&a.show&&a.text){var d=document.createElement('div');d.id='rv-bn';d.textContent=a.text;d.style.cssText='position:sticky;top:0;z-index:50;background:#C9A961;color:#1B2623;padding:10px 14px;text-align:center;font-weight:600';document.body.insertBefore(d,document.body.firstChild)}
