@@ -8,9 +8,9 @@ on:
       - 'manifest.json'
       - 'adhan.mp3'
       - 'icon-*.png'
-      - 'android/**'
       - 'capacitor.config.json'
       - 'package.json'
+      - '.github/native-android.sh'
       - '.github/workflows/build-apk.yml'
   workflow_dispatch:
 
@@ -24,13 +24,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check android project
-        run: |
-          if [ ! -d android ]; then
-            echo "::error::مجلد android غير موجود. ارفعه إلى جذر المستودع."
-            exit 1
-          fi
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -40,7 +33,7 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Prepare web files (no owner panel, no service worker)
+      - name: Prepare web files
         run: |
           mkdir -p www
           cp index.html manifest.json adhan.mp3 icon-*.png www/
@@ -48,7 +41,21 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Sync into Android
+      - name: Create fresh Android project
+        run: |
+          rm -rf android
+          npx cap add android
+
+      - name: Apply native RiwaaAlarm code
+        run: |
+          bash .github/native-android.sh
+          P=android/app/src/main/java/com/riwaa/app
+          sed -i 's/openBatterySettings/requestIgnoreBattery/' $P/AlarmPlugin.java
+          sed -i '/setOnlyAlertOnce(false)/d' $P/AlarmReceiver.java
+          mkdir -p android/app/src/main/res/raw
+          cp adhan.mp3 android/app/src/main/res/raw/adhan.mp3
+
+      - name: Sync web assets
         run: npx cap sync android
 
       - name: Build debug APK
